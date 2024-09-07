@@ -355,6 +355,54 @@ namespace mlib
       return std::move(v);
     }
 
+    //{0, 1, 2, 3, 4, 5};
+    void reverse()
+    {
+      // reverse whole vector
+      if (this->size() == 0)
+        return;
+
+      if (this->size() == 1)
+        return;
+
+      size_t j = this->size() - 1;
+      for (size_t i = 0; i < j; i++)
+      {
+        const T temp = _Vec_container[i];
+        _Vec_container[i] = _Vec_container[j];
+        _Vec_container[j] = temp;
+        j--;
+      }
+    };
+
+    void reverse(size_t start, size_t end)
+    {
+      // reverse from start to end.
+      if (this->size() == 0)
+        return;
+
+      if (this->size() == 1)
+        return;
+
+      const size_t temp_start = start;
+      const size_t temp_end = end;
+
+      if (start > end)
+      {
+        start = temp_end;
+        end = temp_start;
+      }
+
+      size_t j = end;
+      for (size_t i = start; i < j; i++)
+      {
+        const T temp = _Vec_container[i];
+        _Vec_container[i] = _Vec_container[j];
+        _Vec_container[j] = temp;
+        j--;
+      }
+    };
+
     // insert non modifiable lvalue or rvalue
     void insert(size_t index, const T &value)
     {

@@ -8,12 +8,12 @@ int main()
 
   mlib::vec<int> v{0, 1, 2, 3, 4, 5};
 
-  mlib::vec<int> vsliced = v.slice(1, 5);
+  v.reverse();
 
-  std::cout << "--------------- SLICED -----------------" << std::endl;
-  for (size_t i = 0; i < vsliced.size(); i++)
+  std::cout << "--------------- reversed -----------------" << std::endl;
+  for (size_t i = 0; i < v.size(); i++)
   {
-    std::cout << vsliced[i] << " : ";
+    std::cout << v[i] << " : ";
   }
   return 0;
 };
