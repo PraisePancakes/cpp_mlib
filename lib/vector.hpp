@@ -21,6 +21,7 @@ namespace mlib
   {
   private:
     T *_Vec_container;
+
     size_t _Vec_capacity_size;
     size_t _Vec_dynamic_cursor;
     size_t _Vec_cell_size;
@@ -314,6 +315,46 @@ namespace mlib
       }
     };
 
+    void clear()
+    {
+      for (auto it = mbegin(); it != mend(); ++it)
+      {
+        (*it).~T();
+      }
+
+      if (_Vec_container)
+      {
+        free(_Vec_container);
+        _Vec_container = nullptr;
+      }
+    }
+
+    /*
+      @brief
+        slices vector into another vector, returns deep-copy of new sliced vector
+    */
+
+    mlib::vec<T> slice(size_t start, size_t end)
+    {
+      const int temp_start = start;
+      const int temp_end = end;
+
+      if (start > end)
+      {
+        end = temp_start;
+        start = temp_end;
+      }
+
+      mlib::vec<T> v(end - start);
+
+      for (size_t i = start; i < end; i++)
+      {
+        v.push_back(_Vec_container[i]);
+      }
+
+      return std::move(v);
+    }
+
     // insert non modifiable lvalue or rvalue
     void insert(size_t index, const T &value)
     {
@@ -356,6 +397,9 @@ namespace mlib
       _Vec_dynamic_cursor++;
     };
 
-    ~vec() {};
+    ~vec()
+    {
+      clear();
+    };
   }; // end class vec
 } // namespace mlib
