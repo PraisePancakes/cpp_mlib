@@ -1,3 +1,0 @@
-C:\Users\aryas\Downloads\cmake-3.28.0-rc5-windows-x86_64\cmake-3.28.0-rc5-windows-x86_64\bin\cmake.exe -E rm -f CMakeFiles\EXEC.dir/objects.a
-C:\mingw64\bin\ar.exe qc CMakeFiles\EXEC.dir/objects.a @CMakeFiles\EXEC.dir\objects1.rsp
-C:\mingw64\bin\g++.exe -g -Wl,--whole-archive CMakeFiles\EXEC.dir/objects.a -Wl,--no-whole-archive -o EXEC.exe -Wl,--out-implib,libEXEC.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\EXEC.dir\linkLibs.rsp
