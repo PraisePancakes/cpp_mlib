@@ -334,24 +334,62 @@ namespace mlib
     }
 
     // TO:DO FIX THIS
-    void splice(size_t __start__, size_t __deletion_range__, std::initializer_list<T> __args_insert_list__)
+    void splice(size_t start, size_t delete_count, std::initializer_list<T> args)
     {
-      if (__start__ < -_Vec_dynamic_cursor)
+
+      if (start < -_Vec_dynamic_cursor)
       {
-        __start__ = 0;
+        start = 0;
       }
 
-      if (__start__ < 0)
+      if (start < 0)
       {
         // wrap
-        __start__ = _Vec_dynamic_cursor - __start__;
+        start = _Vec_dynamic_cursor + start;
       }
 
-      if (__deletion_range__ > _Vec_dynamic_cursor)
+      if (delete_count + start > _Vec_dynamic_cursor)
       {
-        __deletion_range__ = _Vec_dynamic_cursor - 1;
+        delete_count = _Vec_dynamic_cursor - start;
       }
 
+      for (size_t i = 0; i < delete_count; ++i)
+      {
+        _Vec_destruct_at(start + i);
+      }
+
+      size_t shift_start = start + delete_count;
+      size_t shift_count = _Vec_dynamic_cursor - shift_start;
+      for (size_t i = 0; i < shift_count; ++i)
+      {
+        _Vec_container[start + i] = std::move(_Vec_container[shift_start + i]);
+      }
+
+      _Vec_dynamic_cursor -= delete_count;
+
+      size_t insert_count = args.size();
+      if (insert_count > 0)
+      {
+
+        if (_Vec_dynamic_cursor + insert_count > _Vec_capacity_size)
+        {
+          _Vec_resize_capacity(insert_count);
+        }
+
+        for (size_t i = _Vec_dynamic_cursor; i > start; --i)
+        {
+          _Vec_container[i + insert_count - 1] = std::move(_Vec_container[i - 1]);
+        }
+
+        size_t index = start;
+        for (const T &elem : args)
+        {
+          _Vec_container[index] = elem;
+          ++index;
+        }
+
+        _Vec_dynamic_cursor += insert_count;
+      }
       // clamp
     }
 
