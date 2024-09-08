@@ -333,39 +333,7 @@ namespace mlib
       }
     }
 
-    void remove_set(size_t __start__, size_t __deletion_range__)
-    {
-      for (size_t i = __start__; i <= __deletion_range__; i++)
-      {
-        _Vec_container[i] = 0;
-      }
-    }
-
-    void insert_set(size_t __start__, size_t __deletion_range__, std::initializer_list<T> __args_insert_list__)
-    {
-      size_t list_cursor = 0;
-      for (size_t i = __start__; i < __deletion_range__; ++i)
-      {
-        _Vec_container[i] = __args_insert_list__.begin()[list_cursor];
-        list_cursor++;
-      }
-    }
-
-    void clamp_set(size_t __start__, size_t __deletion_range__, size_t __args_list_size__)
-    {
-      size_t start_to_clamp = __start__ + __args_list_size__;
-      size_t remaining_elems = __deletion_range__ + 1;
-
-      for (size_t i = remaining_elems; i < _Vec_dynamic_cursor; i++)
-      {
-        _Vec_container[start_to_clamp] = _Vec_container[i];
-        start_to_clamp++;
-      }
-
-      _Vec_dynamic_cursor = start_to_clamp;
-    };
-
-    // TO:DO FINISH THIS
+    // TO:DO FIX THIS
     void splice(size_t __start__, size_t __deletion_range__, std::initializer_list<T> __args_insert_list__)
     {
       if (__start__ < -_Vec_dynamic_cursor)
@@ -383,10 +351,6 @@ namespace mlib
       {
         __deletion_range__ = _Vec_dynamic_cursor - 1;
       }
-
-      remove_set(__start__, __deletion_range__);
-      insert_set(__start__, __deletion_range__, __args_insert_list__);
-      clamp_set(__start__, __deletion_range__, __args_insert_list__.size());
 
       // clamp
     }
