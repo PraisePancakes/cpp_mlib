@@ -34,6 +34,11 @@ namespace mlib
       this->_Vec_container = (T *)malloc(__size__ * _Vec_cell_size);
     }
 
+    void _Vec_destruct_at(size_t i)
+    {
+      _Vec_container[i].~T();
+    }
+
     void _Vec_deep_copy(const vec &__other__)
     {
       _Vec_init_container(__other__.size());
@@ -281,8 +286,7 @@ namespace mlib
     T &at(int __ptr_index__) const
     {
       // bound check
-      std::cout << __ptr_index__ << std::endl;
-      std::cout << _Vec_dynamic_cursor << std::endl;
+
       if (__ptr_index__ < 0)
       {
 
@@ -329,25 +333,91 @@ namespace mlib
       }
     }
 
-    /*
-      @brief
-        slices vector into another vector, returns deep-copy of new sliced vector
-    */
-
-    mlib::vec<T> slice(size_t start, size_t end)
+    void remove_set(size_t __start__, size_t __deletion_range__)
     {
-      const int temp_start = start;
-      const int temp_end = end;
-
-      if (start > end)
+      for (size_t i = __start__; i <= __deletion_range__; i++)
       {
-        end = temp_start;
-        start = temp_end;
+        _Vec_destruct_at(_Vec_container[i]);
+      }
+    }
+
+    void insert_set(size_t __start__, size_t __deletion_range__, std::initializer_list<T> __args_insert_list__)
+    {
+
+      size_t list_cursor = 0;
+      for (size_t i = __start__; i < __deletion_range__; i++)
+      {
+        if (list_cursor < __args_insert_list__.size())
+        {
+          _Vec_container[i] = __args_insert_list__.begin()[list_cursor];
+          list_cursor++;
+        }
       }
 
-      mlib::vec<T> v(end - start);
+      size_t diff_to_clamp = __deletion_range__ - __start__ + 1;
+      size_t remaining_elements = __deletion_range__ + 1;
 
-      for (size_t i = start; i < end; i++)
+      for (size_t i = __deletion_range__ + 1; i < _Vec_dynamic_cursor; i++)
+      {
+        _Vec_container[i - diff_to_clamp + list_cursor] = _Vec_container[i];
+      }
+
+      _Vec_dynamic_cursor -= (diff_to_clamp - list_cursor);
+    }
+
+    // TO:DO FINISH THIS
+    void splice(size_t __start__, size_t __deletion_range__, std::initializer_list<T> __args_insert_list__)
+    {
+      if (__start__ < -_Vec_dynamic_cursor)
+      {
+        __start__ = 0;
+      }
+
+      if (__start__ < 0)
+      {
+        // wrap
+        __start__ = _Vec_dynamic_cursor - __start__;
+      }
+
+      if (__deletion_range__ > _Vec_dynamic_cursor)
+      {
+        __deletion_range__ = _Vec_dynamic_cursor - 1;
+      }
+
+      remove_set(__start__, __deletion_range__);
+      insert_set(__start__, __deletion_range__, __args_insert_list__);
+
+      // clamp
+    }
+
+    /*
+     @brief
+       slices vector into another vector, returns deep-copy of new sliced vector
+   */
+    mlib::vec<T> slice(size_t __start__, size_t __end__)
+    {
+      const int temp_start = __start__;
+      const int temp_end = __end__;
+
+      if (__start__ < 0)
+      {
+        __start__ = 0;
+      }
+
+      if (__end__ >= _Vec_dynamic_cursor)
+      {
+        __end__ = _Vec_dynamic_cursor;
+      }
+
+      if (__start__ > __end__)
+      {
+        __end__ = temp_start;
+        __start__ = temp_end;
+      }
+
+      mlib::vec<T> v(__end__ - __start__);
+
+      for (size_t i = __start__; i < __end__; i++)
       {
         v.push_back(_Vec_container[i]);
       }
@@ -375,7 +445,7 @@ namespace mlib
       }
     };
 
-    void reverse(size_t start, size_t end)
+    void reverse(size_t __start__, size_t __end__)
     {
       // reverse from start to end.
       if (this->size() == 0)
@@ -384,17 +454,17 @@ namespace mlib
       if (this->size() == 1)
         return;
 
-      const size_t temp_start = start;
-      const size_t temp_end = end;
+      const size_t temp_start = __start__;
+      const size_t temp_end = __end__;
 
-      if (start > end)
+      if (__start__ > __end__)
       {
-        start = temp_end;
-        end = temp_start;
+        __start__ = temp_end;
+        __end__ = temp_start;
       }
 
-      size_t j = end;
-      for (size_t i = start; i < j; i++)
+      size_t j = __end__;
+      for (size_t i = __start__; i < j; i++)
       {
         const T temp = _Vec_container[i];
         _Vec_container[i] = _Vec_container[j];
