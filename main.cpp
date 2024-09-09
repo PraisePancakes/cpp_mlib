@@ -6,9 +6,16 @@ int main()
 
   // test_iterators();
 
-  mlib::vec<int> v{0, 4, 5, 6, 7, 8};
+  mlib::vec<char> v{'a', 'b', 'c', 'd', 'e', 'f'};
 
   std::cout << "--------------- splice -----------------" << std::endl;
+
+  for (size_t i = 0; i < v.size(); i++)
+  {
+    std::cout << v[i] << " : ";
+  }
+  std::cout << std::endl;
+  v.splice(2, 2, {'r', 'z'});
   for (size_t i = 0; i < v.size(); i++)
   {
     std::cout << v[i] << " : ";

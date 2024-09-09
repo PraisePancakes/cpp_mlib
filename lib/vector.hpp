@@ -341,7 +341,64 @@ namespace mlib
       }
     }
 
-    // TO:DO FIX THIS
+    void splice(size_t __start__, size_t __num_deletions__, std::initializer_list<T> __args_list__)
+    {
+      const size_t span = __num_deletions__;
+      const size_t args_size = __args_list__.size();
+
+      if (span > args_size)
+      {
+
+        size_t list_cursor = 0;
+
+        for (size_t i = __start__; i < __start__ + args_size; i++)
+        {
+          _Vec_container[i] = __args_list__.begin()[list_cursor];
+          list_cursor++;
+        }
+        //    1        3     c
+        //{0, 4, 5, 6, 7, 8};
+        //{7 , 8}
+        const size_t lshift_iterations = span - args_size;
+
+        for (size_t i = 0; i < lshift_iterations; i++)
+        {
+          for (size_t j = __start__ + args_size; j < _Vec_dynamic_cursor; j++)
+          {
+            _Vec_container[j] = _Vec_container[j + 1];
+          }
+          _Vec_dynamic_cursor--;
+        }
+
+        // fill left to fill in deletions
+      }
+      else if (span < args_size)
+      {
+        size_t i = __start__;
+        size_t list_cursor = 0;
+
+        for (i = __start__; i < __start__ + span; ++i)
+        {
+          _Vec_container[i] = __args_list__.begin()[list_cursor];
+          list_cursor++;
+        }
+
+        for (size_t j = i; j < __start__ + args_size; j++)
+        {
+
+          insert(j, __args_list__.begin()[list_cursor++]);
+        }
+      }
+      else if (span == args_size)
+      {
+        size_t list_cursor = 0;
+        for (size_t i = __start__; i < __start__ + span; ++i)
+        {
+          _Vec_container[i] = __args_list__.begin()[list_cursor];
+          list_cursor++;
+        }
+      }
+    }
 
     /*
      @brief
