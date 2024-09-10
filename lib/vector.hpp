@@ -242,7 +242,21 @@ namespace mlib
     }
 
     vec() { _Vec_init_container(__INITIAL_VECTOR_CAPACITY__); };
+    bool operator==(const vec &__other__)
+    {
+      if (this->size() != __other__.size())
+        return false;
 
+      size_t other_cursor = 0;
+      for (size_t i = 0; i < this->size(); i++)
+      {
+        if (_Vec_container[i] != __other__.at(other_cursor))
+          return false;
+        other_cursor++;
+      }
+
+      return true;
+    };
     vec(std::initializer_list<T> __elems__)
     {
 
@@ -330,14 +344,6 @@ namespace mlib
       {
         free(_Vec_container);
         _Vec_container = nullptr;
-      }
-    }
-
-    void remove_set(size_t start, size_t delete_count)
-    {
-      for (size_t i = 0; i < delete_count; ++i)
-      {
-        _Vec_destruct_at(start + i);
       }
     }
 
