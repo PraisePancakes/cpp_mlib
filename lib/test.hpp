@@ -59,7 +59,7 @@ public:
         }
     }
 
-    void set_operation(std::function<void()> __functor__)
+        void set_operation(std::function<void()> __functor__)
     {
         std::cout << this->_ITest_title;
         this->_ITest_operation = __functor__;
