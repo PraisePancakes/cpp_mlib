@@ -321,6 +321,10 @@ namespace mlib
 
     void pop_back() noexcept
     {
+      if (_Vec_dynamic_cursor == 0)
+      {
+        return;
+      }
       --_Vec_dynamic_cursor;
       (_Vec_container + _Vec_dynamic_cursor)->~__VECTYPE();
     };

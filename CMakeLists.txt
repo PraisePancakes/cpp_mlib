@@ -8,8 +8,7 @@ add_executable(
     EXEC 
     main.cpp
     lib/vector.hpp
-    tests/vector/iterators/test_iterators.cpp
-    tests/vector/methods/test_methods.cpp
+    tests/vector/test_vector.cpp
     )
 
 
