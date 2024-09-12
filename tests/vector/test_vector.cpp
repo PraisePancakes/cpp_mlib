@@ -6,36 +6,37 @@ using _vec = mlib::vec<int>;
 
 void test_push()
 {
-  MTest<_vec, _vec> t({0, 1, 2}, {0, 1, 2, 3});
-  auto tlambda = [&]() -> _vec
+  MTest<_vec, _vec> t({0, 1, 2});
+  auto tlambda = [&t]() -> _vec
   {
-    t._MTEST_input.push_back(3);
-    return t._MTEST_input;
+    t.input().push_back(3);
+    return t.input();
   };
-  t.test(tlambda);
+  t.test(tlambda, {0, 1, 2, 3});
+
 };
 
 void test_pop()
 {
-  MTest<_vec, _vec> t({0, 1, 2, 3}, {0, 1, 2});
-  auto tlambda = [&]() -> _vec
+  MTest<_vec, _vec> t({0, 1, 2, 3});
+  auto tlambda = [&t]() -> _vec
   {
-    t._MTEST_input.pop_back();
-    return t._MTEST_input;
+    t.input().pop_back();
+    return t.input();
   };
 
-  t.test(tlambda);
+  t.test(tlambda, {0, 1, 2});
 };
 
 void test_empty()
 {
-  MTest<_vec, bool> t({}, true);
+  MTest<_vec, bool> t({});
   auto tlambda = [&]() -> bool
   {
-    return t._MTEST_input.empty();
+    return t.input().empty();
   };
 
-  t.test(tlambda);
+  t.test(tlambda, true);
 }
 
 void test_vector()

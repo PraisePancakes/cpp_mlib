@@ -8,20 +8,16 @@
 template <typename __INPUT, typename __EXPOUTPUT>
 class MTest
 {
+    bool _M_passed = false;
+    __EXPOUTPUT _M_expected;
+    __INPUT _M_input;
 
 public:
-    __INPUT _MTEST_input;
-    __EXPOUTPUT _MTEST_expected;
-    MTest(__INPUT __in__, __EXPOUTPUT __ein__)
+    bool test(std::function<__EXPOUTPUT()> __functor__, __EXPOUTPUT __exp_out__)
     {
-        this->_MTEST_input = __in__;
-        this->_MTEST_expected = __ein__;
-    };
-
-    bool test(std::function<__EXPOUTPUT()> __functor__)
-    {
+        _M_expected = __exp_out__;
         __EXPOUTPUT result = __functor__();
-        if (result == _MTEST_expected)
+        if (result == _M_expected)
         {
             std::cout << "passed" << std::endl;
         }
@@ -29,6 +25,24 @@ public:
         {
             std::cout << "failed" << std::endl;
         }
-        return result == _MTEST_expected;
+        return result == _M_expected;
+    }
+
+    __INPUT& input()
+    {
+        return this->_M_input;
+    }
+
+    MTest(__INPUT __in__)
+    {
+        this->_M_input = __in__;
+
+        _M_passed = false;
+    };
+
+    ~MTest()
+    {
+        _M_input.~__INPUT();
+        _M_expected.~__EXPOUTPUT();
     }
 };
