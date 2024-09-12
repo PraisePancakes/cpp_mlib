@@ -20,23 +20,23 @@ namespace mlib
   class vec
   {
   private:
-    __VECTYPE *_Vec_container;
+    __VECTYPE *_M_container;
 
-    size_t _Vec_capacity_size;
-    size_t _Vec_dynamic_cursor;
-    size_t _Vec_cell_size;
+    size_t _M_capacity_size;
+    size_t _M_dynamic_cursor;
+    size_t _M_cell_size;
 
     void _Vec_init_container(size_t __size__)
     {
-      this->_Vec_capacity_size = __size__;
-      _Vec_dynamic_cursor = 0;
-      this->_Vec_cell_size = sizeof(__VECTYPE);
-      this->_Vec_container = (__VECTYPE *)malloc(__size__ * _Vec_cell_size);
+      this->_M_capacity_size = __size__;
+      _M_dynamic_cursor = 0;
+      this->_M_cell_size = sizeof(__VECTYPE);
+      this->_M_container = (__VECTYPE *)malloc(__size__ * _M_cell_size);
     }
 
     void _Vec_destruct_at(size_t i)
     {
-      _Vec_container[i].~__VECTYPE();
+      _M_container[i].~__VECTYPE();
     }
 
     void _Vec_deep_copy(const vec &__other__)
@@ -45,9 +45,9 @@ namespace mlib
       size_t safe_iterator = 0;
       for (size_t i = 0; i < __other__.size(); i++)
       {
-        _Vec_container[safe_iterator] = __other__[i];
+        _M_container[safe_iterator] = __other__[i];
         safe_iterator++;
-        _Vec_dynamic_cursor++;
+        _M_dynamic_cursor++;
       }
     };
 
@@ -55,9 +55,9 @@ namespace mlib
     {
 
       const size_t new_size =
-          (_Vec_capacity_size + __capacity_size_offset__) * _Vec_cell_size;
-      this->_Vec_container = (__VECTYPE *)realloc(_Vec_container, new_size);
-      _Vec_capacity_size += __capacity_size_offset__;
+          (_M_capacity_size + __capacity_size_offset__) * _M_cell_size;
+      this->_M_container = (__VECTYPE *)realloc(_M_container, new_size);
+      _M_capacity_size += __capacity_size_offset__;
     };
 
   public:
@@ -203,42 +203,42 @@ namespace mlib
 
     iterator mbegin() const
     {
-      return iterator(_Vec_container);
+      return iterator(_M_container);
     }
 
     iterator mend() const
     {
-      return iterator(_Vec_container + _Vec_dynamic_cursor);
+      return iterator(_M_container + _M_dynamic_cursor);
     }
 
     const_iterator mcbegin() const
     {
-      return const_iterator(_Vec_container);
+      return const_iterator(_M_container);
     }
 
     const_iterator mcend() const
     {
-      return const_iterator(_Vec_container + _Vec_dynamic_cursor);
+      return const_iterator(_M_container + _M_dynamic_cursor);
     }
 
     reverse_iterator mrbegin() const
     {
-      return reverse_iterator(_Vec_container + (_Vec_dynamic_cursor - 1));
+      return reverse_iterator(_M_container + (_M_dynamic_cursor - 1));
     }
 
     reverse_iterator mrend() const
     {
-      return reverse_iterator(_Vec_container - 1);
+      return reverse_iterator(_M_container - 1);
     }
 
     const_reverse_iterator mcrbegin() const
     {
-      return const_reverse_iterator(_Vec_container + (_Vec_dynamic_cursor - 1));
+      return const_reverse_iterator(_M_container + (_M_dynamic_cursor - 1));
     }
 
     const_reverse_iterator mcrend() const
     {
-      return const_reverse_iterator(_Vec_container - 1);
+      return const_reverse_iterator(_M_container - 1);
     }
 
     vec() { _Vec_init_container(__INITIAL_VECTOR_CAPACITY__); };
@@ -250,7 +250,7 @@ namespace mlib
       size_t other_cursor = 0;
       for (size_t i = 0; i < this->size(); i++)
       {
-        if (_Vec_container[i] != __other__.at(other_cursor))
+        if (_M_container[i] != __other__.at(other_cursor))
           return false;
         other_cursor++;
       }
@@ -265,9 +265,9 @@ namespace mlib
       size_t index = 0;
       for (auto it = __elems__.begin(); it != __elems__.end(); it++)
       {
-        *(_Vec_container + index) = *it;
+        *(_M_container + index) = *it;
         index++;
-        _Vec_dynamic_cursor++;
+        _M_dynamic_cursor++;
       }
     };
     vec(const vec &__other__) { _Vec_deep_copy(__other__); };
@@ -275,7 +275,7 @@ namespace mlib
     {
       if (this != &__other__)
       {
-        free(_Vec_container);
+        free(_M_container);
         _Vec_deep_copy(__other__);
       }
       return *this;
@@ -283,7 +283,7 @@ namespace mlib
     // api
     __VECTYPE &operator[](const size_t __ptr_index__) const
     {
-      return *(_Vec_container + __ptr_index__);
+      return *(_M_container + __ptr_index__);
     };
 
     /*
@@ -306,34 +306,34 @@ namespace mlib
 
         throw std::out_of_range("\nIndex succeeded left bound with underflowed range index, out of range");
       }
-      if (__ptr_index__ >= _Vec_dynamic_cursor)
+      if (__ptr_index__ >= _M_dynamic_cursor)
       {
         throw std::out_of_range("\nIndex succeeded right bound with overflowed range index, out of range ");
       }
 
-      return *(_Vec_container + __ptr_index__);
+      return *(_M_container + __ptr_index__);
     };
 
     bool empty() const
     {
-      return _Vec_dynamic_cursor == 0;
+      return _M_dynamic_cursor == 0;
     }
 
     void pop_back() noexcept
     {
-      if (_Vec_dynamic_cursor == 0)
+      if (_M_dynamic_cursor == 0)
       {
         return;
       }
-      --_Vec_dynamic_cursor;
-      (_Vec_container + _Vec_dynamic_cursor)->~__VECTYPE();
+      --_M_dynamic_cursor;
+      (_M_container + _M_dynamic_cursor)->~__VECTYPE();
     };
 
     void for_each(std::function<void(__VECTYPE)> __functor__) noexcept
     {
-      for (size_t i = 0; i < _Vec_capacity_size; i++)
+      for (size_t i = 0; i < _M_capacity_size; i++)
       {
-        __functor__(*(_Vec_container + i));
+        __functor__(*(_M_container + i));
       }
     };
 
@@ -344,10 +344,10 @@ namespace mlib
         (*it).~__VECTYPE();
       }
 
-      if (_Vec_container)
+      if (_M_container)
       {
-        free(_Vec_container);
-        _Vec_container = nullptr;
+        free(_M_container);
+        _M_container = nullptr;
       }
     }
 
@@ -363,7 +363,7 @@ namespace mlib
 
         for (size_t i = __start__; i < __start__ + args_size; i++)
         {
-          _Vec_container[i] = __args_list__.begin()[list_cursor];
+          _M_container[i] = __args_list__.begin()[list_cursor];
           list_cursor++;
         }
         //    1        3     c
@@ -373,11 +373,11 @@ namespace mlib
 
         for (size_t i = 0; i < lshift_iterations; i++)
         {
-          for (size_t j = __start__ + args_size; j < _Vec_dynamic_cursor; j++)
+          for (size_t j = __start__ + args_size; j < _M_dynamic_cursor; j++)
           {
-            _Vec_container[j] = _Vec_container[j + 1];
+            _M_container[j] = _M_container[j + 1];
           }
-          _Vec_dynamic_cursor--;
+          _M_dynamic_cursor--;
         }
 
         // fill left to fill in deletions
@@ -389,7 +389,7 @@ namespace mlib
 
         for (i = __start__; i < __start__ + span; ++i)
         {
-          _Vec_container[i] = __args_list__.begin()[list_cursor];
+          _M_container[i] = __args_list__.begin()[list_cursor];
           list_cursor++;
         }
 
@@ -404,7 +404,7 @@ namespace mlib
         size_t list_cursor = 0;
         for (size_t i = __start__; i < __start__ + span; ++i)
         {
-          _Vec_container[i] = __args_list__.begin()[list_cursor];
+          _M_container[i] = __args_list__.begin()[list_cursor];
           list_cursor++;
         }
       }
@@ -424,9 +424,9 @@ namespace mlib
         __start__ = 0;
       }
 
-      if (__end__ >= _Vec_dynamic_cursor)
+      if (__end__ >= _M_dynamic_cursor)
       {
-        __end__ = _Vec_dynamic_cursor;
+        __end__ = _M_dynamic_cursor;
       }
 
       if (__start__ > __end__)
@@ -439,7 +439,7 @@ namespace mlib
 
       for (size_t i = __start__; i < __end__; i++)
       {
-        v.push_back(_Vec_container[i]);
+        v.push_back(_M_container[i]);
       }
 
       return std::move(v);
@@ -458,9 +458,9 @@ namespace mlib
       size_t j = this->size() - 1;
       for (size_t i = 0; i < j; i++)
       {
-        const __VECTYPE temp = _Vec_container[i];
-        _Vec_container[i] = _Vec_container[j];
-        _Vec_container[j] = temp;
+        const __VECTYPE temp = _M_container[i];
+        _M_container[i] = _M_container[j];
+        _M_container[j] = temp;
         j--;
       }
     };
@@ -486,9 +486,9 @@ namespace mlib
       size_t j = __end__;
       for (size_t i = __start__; i < j; i++)
       {
-        const __VECTYPE temp = _Vec_container[i];
-        _Vec_container[i] = _Vec_container[j];
-        _Vec_container[j] = temp;
+        const __VECTYPE temp = _M_container[i];
+        _M_container[i] = _M_container[j];
+        _M_container[j] = temp;
         j--;
       }
     };
@@ -498,41 +498,41 @@ namespace mlib
     {
       _Vec_resize_capacity(1);
 
-      size_t shift_index = _Vec_dynamic_cursor;
+      size_t shift_index = _M_dynamic_cursor;
 
       while (shift_index > index)
       {
 
         // [1, 4, ]
-        __VECTYPE *temp = _Vec_container + shift_index;
+        __VECTYPE *temp = _M_container + shift_index;
         *(temp) = *(temp - 1);
         shift_index--;
       }
 
-      *(_Vec_container + index) = value;
-      _Vec_dynamic_cursor++;
+      *(_M_container + index) = value;
+      _M_dynamic_cursor++;
     };
 
-    size_t size() const { return _Vec_dynamic_cursor; }
+    size_t size() const { return _M_dynamic_cursor; }
     size_t cursor_byte_size() const noexcept
     {
-      return _Vec_dynamic_cursor * _Vec_cell_size;
+      return _M_dynamic_cursor * _M_cell_size;
     };
     size_t capacity_byte_size() const noexcept
     {
-      return _Vec_capacity_size * _Vec_cell_size;
+      return _M_capacity_size * _M_cell_size;
     }
     void push_back(const __VECTYPE &__val__)
     {
-      if (_Vec_dynamic_cursor >= _Vec_capacity_size)
+      if (_M_dynamic_cursor >= _M_capacity_size)
       {
         // realloc
-        _Vec_container =
-            (__VECTYPE *)realloc(_Vec_container, (++_Vec_capacity_size) * _Vec_cell_size);
+        _M_container =
+            (__VECTYPE *)realloc(_M_container, (++_M_capacity_size) * _M_cell_size);
       }
 
-      *(_Vec_container + _Vec_dynamic_cursor) = __val__;
-      _Vec_dynamic_cursor++;
+      *(_M_container + _M_dynamic_cursor) = __val__;
+      _M_dynamic_cursor++;
     };
 
     ~vec()
