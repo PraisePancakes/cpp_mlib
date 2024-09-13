@@ -9,7 +9,10 @@ int main()
   // test_vector();
 
   mlib::string s("hello");
-  s[0] = 'a';
-  std::cout << s;
+
+  for (size_t i = 0; i < s.length(); i++)
+  {
+    std::cout << s[i] << " : " << std::endl;
+  }
   return 0;
 };

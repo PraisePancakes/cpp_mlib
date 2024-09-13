@@ -23,7 +23,6 @@ namespace mlib
 
             _underlying_const_alloc(const char *__str__)
             {
-                std::cout << __str__;
                 internal_str = __str__;
                 internal_byte_size = sizeof(char) * _M_get_size(__str__);
             }
@@ -56,7 +55,7 @@ namespace mlib
         {
 
             const size_t str_size = sizeof(char) * __str__.internal_byte_size;
-            std::cout << __str__.internal_str << str_size;
+
             _M_modifiable_str = (char *)malloc(str_size);
             for (size_t i = 0; i < str_size; i++)
             {
@@ -88,6 +87,21 @@ namespace mlib
         {
             return __os__ << __str__.data();
         }
+
+        size_t length() const
+        {
+            return this->_M_s_size - 1;
+        };
+
+        ~string()
+        {
+
+            delete _M_internal_str;
+            _M_internal_str = nullptr;
+
+            free(_M_modifiable_str);
+            _M_modifiable_str = nullptr;
+        };
     };
 
 };
