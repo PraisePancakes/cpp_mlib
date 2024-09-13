@@ -1,5 +1,5 @@
 #pragma once
-#include "vector.hpp"
+#include "mvector.hpp"
 
 namespace mlib
 {
@@ -12,16 +12,30 @@ namespace mlib
         stack() {};
 
         // api
+
+        size_t size() const
+        {
+            return _M_container.size();
+        }
+
         void push(const __STKTYPE &__val__)
         {
             _M_container.push_back(__val__);
         };
         __STKTYPE &top() const
         {
-            return _M_container[_M_container.size() - 1];
+            if (size() == 0)
+            {
+                return _M_container.at(0);
+            };
+            return _M_container[size() - 1];
         }
-        __STKTYPE &pop()
+        void pop()
         {
+            if (_M_container.empty())
+            {
+                return;
+            }
             _M_container.pop_back();
         }
     };

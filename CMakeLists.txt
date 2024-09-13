@@ -7,7 +7,10 @@ project(PROJECT_NAME, VERSION 0.0.1)
 add_executable(
     EXEC 
     main.cpp
-    lib/vector.hpp
+    lib/mvector.hpp
+    lib/mstack.hpp
+    lib/mtest.hpp
+    lib/mmap.hpp
     tests/vector/test_vector.cpp
     )
 

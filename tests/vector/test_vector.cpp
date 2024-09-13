@@ -1,6 +1,6 @@
 #include "test_vector.hpp"
-#include "../../lib/vector.hpp"
-#include "../../lib/test.hpp"
+#include "../../lib/mvector.hpp"
+#include "../../lib/mtest.hpp"
 
 using _vec = mlib::vec<int>;
 
@@ -38,8 +38,21 @@ void test_empty()
   t.test(tlambda, true, "test if empty");
 }
 
+void test_slice()
+{
+  MTest<_vec, _vec> t({0, 1, 2}, "Vector");
+
+  auto tlambda = [&]() -> _vec
+  {
+    return t.input().slice(0, 1);
+  };
+
+  t.test(tlambda, {0}, "slice from one to other");
+};
+
 void test_vector()
 {
+  test_slice();
   test_empty();
   test_push();
   test_pop();
