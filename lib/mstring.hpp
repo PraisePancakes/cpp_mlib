@@ -73,6 +73,12 @@ namespace mlib
             _copy_to_modifiable(*_M_internal_str);
         };
 
+        string()
+        {
+            _M_internal_str = new _underlying_const_alloc("");
+            _copy_to_modifiable(*_M_internal_str);
+        };
+
         char *data() const
         {
             return _M_modifiable_str;
@@ -83,10 +89,42 @@ namespace mlib
             return _M_modifiable_str[__index__];
         };
 
+        mlib::string &append(const mlib::string &__other__)
+        {
+            // get __str__ size
+            this->resize(__other__.length());
+            // helloworld len 10  : '\0' at 11
+            const size_t next_open_cell = this->length() - __other__.length();
+            size_t other_cursor = 0;
+            for (size_t i = next_open_cell; i < this->length(); i++)
+            {
+                this->_M_modifiable_str[i] = __other__.data()[other_cursor];
+                other_cursor++;
+            }
+
+            _M_modifiable_str[this->length()] = '\0';
+
+            // place null terminator at this->length() + 1;
+            return *this;
+        }
+
+        mlib::string &operator+=(const mlib::string &__other__)
+        {
+            return this->append(__other__);
+        }
+
+        
+
         friend std::ostream &operator<<(std::ostream &__os__, const mlib::string &__str__)
         {
             return __os__ << __str__.data();
         }
+
+        void resize(const size_t __sz_off__)
+        {
+            this->_M_modifiable_str = (char *)realloc(_M_modifiable_str, this->length() + __sz_off__);
+            this->_M_s_size = this->length() + __sz_off__ + 1;
+        };
 
         size_t length() const
         {

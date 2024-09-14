@@ -6,13 +6,12 @@
 int main()
 {
 
+  mlib::string s = "hello";
+  s += "world";
+
+  std::cout << s;
+
   // test_vector();
 
-  mlib::string s("hello");
-
-  for (size_t i = 0; i < s.length(); i++)
-  {
-    std::cout << s[i] << " : " << std::endl;
-  }
   return 0;
 };
