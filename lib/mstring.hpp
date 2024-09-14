@@ -7,7 +7,7 @@ namespace mlib
 
     class string
     {
-
+    private:
         struct _underlying_const_alloc
         {
 
@@ -65,20 +65,77 @@ namespace mlib
             _M_s_size = str_size;
         }
 
-    public:
-        string(const char *__str__)
+        void _perform_deep_copy(const char *__str__)
         {
-
             _M_internal_str = new _underlying_const_alloc(__str__);
             _copy_to_modifiable(*_M_internal_str);
         };
 
-        string()
+        void _perform_deep_copy(const mlib::string &__other__)
         {
-            _M_internal_str = new _underlying_const_alloc("");
+            _M_internal_str = new _underlying_const_alloc(__other__.data());
             _copy_to_modifiable(*_M_internal_str);
         };
 
+    public:
+        class iterator
+        {
+            char *_Iterator_ptr;
+
+        public:
+            iterator() : _Iterator_ptr(nullptr) {}
+            iterator(char *__iter_loc__) : _Iterator_ptr(__iter_loc__) {}
+
+            bool operator!=(const iterator &other)
+            {
+
+                return _Iterator_ptr != other._Iterator_ptr;
+            };
+
+            iterator &operator++()
+            {
+
+                ++_Iterator_ptr;
+                return *this;
+            }
+            iterator &operator--()
+            {
+
+                --_Iterator_ptr;
+                return *this;
+            }
+
+            char &operator*() const
+            {
+                return *(_Iterator_ptr);
+            };
+            ~iterator() {};
+        };
+
+        string(const char *__str__)
+        {
+            _perform_deep_copy(__str__);
+        };
+
+        string()
+        {
+            _perform_deep_copy("");
+        };
+
+        string(const mlib::string &__other__)
+        {
+            _perform_deep_copy(__other__);
+        }
+
+        string(mlib::string &__other__)
+        {
+            _perform_deep_copy(__other__);
+        }
+
+        string(mlib::string &&__other__)
+        {
+            _perform_deep_copy(__other__);
+        }
         char *data() const
         {
             return _M_modifiable_str;
@@ -88,6 +145,15 @@ namespace mlib
         {
             return _M_modifiable_str[__index__];
         };
+
+        char *begin() const noexcept
+        {
+            return this->_M_modifiable_str;
+        }
+        char *end() const noexcept
+        {
+            return this->_M_modifiable_str + this->length();
+        }
 
         mlib::string &append(const mlib::string &__other__)
         {
@@ -113,8 +179,6 @@ namespace mlib
             return this->append(__other__);
         }
 
-        
-
         friend std::ostream &operator<<(std::ostream &__os__, const mlib::string &__str__)
         {
             return __os__ << __str__.data();
@@ -130,6 +194,11 @@ namespace mlib
         {
             return this->_M_s_size - 1;
         };
+
+        size_t size() const
+        {
+            return this->_M_s_size - 1;
+        }
 
         ~string()
         {

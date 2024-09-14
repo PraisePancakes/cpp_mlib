@@ -6,10 +6,9 @@
 int main()
 {
 
-  mlib::string s = "hello";
-  s += "world";
+  mlib::string s("hello");
 
-  std::cout << s;
+  std::cout << "::" << s;
 
   // test_vector();
 
