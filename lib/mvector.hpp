@@ -5,6 +5,7 @@
 #include <vector>
 #include <exception>
 #include <initializer_list>
+#include "mallocator.hpp"
 
 #define __INITIAL_VECTOR_CAPACITY__ 1
 
@@ -16,11 +17,11 @@ inline ptrdiff_t address_diff_in_bytes(const void *addr1, const void *addr2)
 
 namespace mlib
 {
-  template <typename __VECTYPE>
+  template <typename __CTy, class Allocator = allocator<__CTy>>
   class vec
   {
   private:
-    __VECTYPE *_M_container;
+    __CTy *_M_container;
 
     size_t _M_capacity_size;
     size_t _M_dynamic_cursor;
@@ -30,13 +31,13 @@ namespace mlib
     {
       this->_M_capacity_size = __size__;
       _M_dynamic_cursor = 0;
-      this->_M_cell_size = sizeof(__VECTYPE);
-      this->_M_container = (__VECTYPE *)malloc(__size__ * _M_cell_size);
+      this->_M_cell_size = sizeof(__CTy);
+      this->_M_container = (__CTy *)malloc(__size__ * _M_cell_size);
     }
 
     void _Vec_destruct_at(size_t i)
     {
-      _M_container[i].~__VECTYPE();
+      _M_container[i].~__CTy();
     }
 
     void _Vec_deep_copy(const vec &__other__)
@@ -56,18 +57,18 @@ namespace mlib
 
       const size_t new_size =
           (_M_capacity_size + __capacity_size_offset__) * _M_cell_size;
-      this->_M_container = (__VECTYPE *)realloc(_M_container, new_size);
+      this->_M_container = (__CTy *)realloc(_M_container, new_size);
       _M_capacity_size += __capacity_size_offset__;
     };
 
   public:
     class iterator
     {
-      __VECTYPE *_Iterator_ptr;
+      __CTy *_Iterator_ptr;
 
     public:
       iterator() : _Iterator_ptr(nullptr) {}
-      iterator(__VECTYPE *__iter_loc__) : _Iterator_ptr(__iter_loc__) {}
+      iterator(__CTy *__iter_loc__) : _Iterator_ptr(__iter_loc__) {}
 
       bool operator!=(const iterator &other)
       {
@@ -88,7 +89,7 @@ namespace mlib
         return *this;
       }
 
-      __VECTYPE &operator*() const
+      __CTy &operator*() const
       {
         return *(_Iterator_ptr);
       };
@@ -97,11 +98,11 @@ namespace mlib
 
     class reverse_iterator
     {
-      __VECTYPE *_Iterator_ptr;
+      __CTy *_Iterator_ptr;
 
     public:
       reverse_iterator() : _Iterator_ptr(nullptr) {};
-      reverse_iterator(__VECTYPE *__iter_loc__) : _Iterator_ptr(__iter_loc__) {};
+      reverse_iterator(__CTy *__iter_loc__) : _Iterator_ptr(__iter_loc__) {};
       reverse_iterator(const reverse_iterator &other) = delete;
       reverse_iterator(reverse_iterator &&other) = delete;
 
@@ -117,7 +118,7 @@ namespace mlib
         return *this;
       }
 
-      __VECTYPE &operator*()
+      __CTy &operator*()
       {
         return *(_Iterator_ptr);
       };
@@ -132,11 +133,11 @@ namespace mlib
 
     class const_reverse_iterator
     {
-      __VECTYPE *_Iterator_ptr;
+      __CTy *_Iterator_ptr;
 
     public:
       const_reverse_iterator() : _Iterator_ptr(nullptr) {};
-      const_reverse_iterator(__VECTYPE *__iter_loc__) : _Iterator_ptr(__iter_loc__) {};
+      const_reverse_iterator(__CTy *__iter_loc__) : _Iterator_ptr(__iter_loc__) {};
       const_reverse_iterator(const const_reverse_iterator &other) = delete;
       const_reverse_iterator(const_reverse_iterator &&other) = delete;
 
@@ -152,7 +153,7 @@ namespace mlib
         return *this;
       }
 
-      const __VECTYPE &operator*()
+      const __CTy &operator*()
       {
         return *(_Iterator_ptr);
       };
@@ -168,11 +169,11 @@ namespace mlib
 
     class const_iterator
     {
-      __VECTYPE *_Iterator_ptr;
+      __CTy *_Iterator_ptr;
 
     public:
       const_iterator() : _Iterator_ptr(nullptr) {}
-      const_iterator(__VECTYPE *__iter_loc__) : _Iterator_ptr(__iter_loc__) {}
+      const_iterator(__CTy *__iter_loc__) : _Iterator_ptr(__iter_loc__) {}
       const_iterator(const const_iterator &other) = delete;
       const_iterator(const_iterator &&other) = delete;
 
@@ -189,7 +190,7 @@ namespace mlib
         return *this;
       }
 
-      const __VECTYPE &operator*() const
+      const __CTy &operator*() const
       {
         return *(_Iterator_ptr);
       };
@@ -257,7 +258,7 @@ namespace mlib
 
       return true;
     };
-    vec(std::initializer_list<__VECTYPE> __elems__)
+    vec(std::initializer_list<__CTy> __elems__)
     {
 
       _Vec_init_container(__elems__.size());
@@ -281,7 +282,7 @@ namespace mlib
       return *this;
     }
     // api
-    __VECTYPE &operator[](const size_t __ptr_index__) const
+    __CTy &operator[](const size_t __ptr_index__) const
     {
       return *(_M_container + __ptr_index__);
     };
@@ -297,7 +298,7 @@ namespace mlib
        storage
     */
 
-    __VECTYPE &at(int __ptr_index__) const
+    __CTy &at(int __ptr_index__) const
     {
       // bound check
 
@@ -326,10 +327,10 @@ namespace mlib
         return;
       }
       --_M_dynamic_cursor;
-      (_M_container + _M_dynamic_cursor)->~__VECTYPE();
+      (_M_container + _M_dynamic_cursor)->~__CTy();
     };
 
-    void for_each(std::function<void(__VECTYPE)> __functor__) noexcept
+    void for_each(std::function<void(__CTy)> __functor__) noexcept
     {
       for (size_t i = 0; i < _M_capacity_size; i++)
       {
@@ -341,7 +342,7 @@ namespace mlib
     {
       for (auto it = mbegin(); it != mend(); ++it)
       {
-        (*it).~__VECTYPE();
+        (*it).~__CTy();
       }
 
       if (_M_container)
@@ -351,7 +352,7 @@ namespace mlib
       }
     }
 
-    void splice(size_t __start__, size_t __num_deletions__, std::initializer_list<__VECTYPE> __args_list__)
+    void splice(size_t __start__, size_t __num_deletions__, std::initializer_list<__CTy> __args_list__)
     {
       const size_t span = __num_deletions__;
       const size_t args_size = __args_list__.size();
@@ -414,7 +415,7 @@ namespace mlib
      @brief
        slices vector into another vector, returns deep-copy of new sliced vector
    */
-    mlib::vec<__VECTYPE> slice(size_t __start__, size_t __end__)
+    mlib::vec<__CTy> slice(size_t __start__, size_t __end__)
     {
       const int temp_start = __start__;
       const int temp_end = __end__;
@@ -435,7 +436,7 @@ namespace mlib
         __start__ = temp_end;
       }
 
-      mlib::vec<__VECTYPE> v(__end__ - __start__);
+      mlib::vec<__CTy> v(__end__ - __start__);
 
       for (size_t i = __start__; i < __end__; i++)
       {
@@ -458,7 +459,7 @@ namespace mlib
       size_t j = this->size() - 1;
       for (size_t i = 0; i < j; i++)
       {
-        const __VECTYPE temp = _M_container[i];
+        const __CTy temp = _M_container[i];
         _M_container[i] = _M_container[j];
         _M_container[j] = temp;
         j--;
@@ -486,7 +487,7 @@ namespace mlib
       size_t j = __end__;
       for (size_t i = __start__; i < j; i++)
       {
-        const __VECTYPE temp = _M_container[i];
+        const __CTy temp = _M_container[i];
         _M_container[i] = _M_container[j];
         _M_container[j] = temp;
         j--;
@@ -494,7 +495,7 @@ namespace mlib
     };
 
     // insert non modifiable lvalue or rvalue
-    void insert(size_t index, const __VECTYPE &value)
+    void insert(size_t index, const __CTy &value)
     {
       _Vec_resize_capacity(1);
 
@@ -504,7 +505,7 @@ namespace mlib
       {
 
         // [1, 4, ]
-        __VECTYPE *temp = _M_container + shift_index;
+        __CTy *temp = _M_container + shift_index;
         *(temp) = *(temp - 1);
         shift_index--;
       }
@@ -522,13 +523,13 @@ namespace mlib
     {
       return _M_capacity_size * _M_cell_size;
     }
-    void push_back(const __VECTYPE &__val__)
+    void push_back(const __CTy &__val__)
     {
       if (_M_dynamic_cursor >= _M_capacity_size)
       {
         // realloc
         _M_container =
-            (__VECTYPE *)realloc(_M_container, (++_M_capacity_size) * _M_cell_size);
+            (__CTy *)realloc(_M_container, (++_M_capacity_size) * _M_cell_size);
       }
 
       *(_M_container + _M_dynamic_cursor) = __val__;

@@ -250,6 +250,8 @@ namespace mlib
             return _M_modifiable_str[__index__];
         };
 
+        
+
         char *begin() const noexcept
         {
             return this->_M_modifiable_str;
