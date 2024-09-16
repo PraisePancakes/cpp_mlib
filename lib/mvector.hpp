@@ -17,22 +17,18 @@ inline ptrdiff_t address_diff_in_bytes(const void *addr1, const void *addr2)
 
 namespace mlib
 {
-  template <typename __CTy, class Allocator = allocator<__CTy>>
+  template <typename __CTy, class __Alloc = allocator<__CTy>>
   class vec
   {
   private:
     __CTy *_M_container;
-
-    size_t _M_capacity_size;
+    __Alloc _M_allocator;
     size_t _M_dynamic_cursor;
-    size_t _M_cell_size;
 
     void _Vec_init_container(size_t __size__)
     {
-      this->_M_capacity_size = __size__;
       _M_dynamic_cursor = 0;
-      this->_M_cell_size = sizeof(__CTy);
-      this->_M_container = (__CTy *)malloc(__size__ * _M_cell_size);
+      this->_M_container = _M_allocator.allocate(__size__);
     }
 
     void _Vec_destruct_at(size_t i)
@@ -43,22 +39,19 @@ namespace mlib
     void _Vec_deep_copy(const vec &__other__)
     {
       _Vec_init_container(__other__.size());
-      size_t safe_iterator = 0;
+      size_t safe_index = 0;
       for (size_t i = 0; i < __other__.size(); i++)
       {
-        _M_container[safe_iterator] = __other__[i];
-        safe_iterator++;
+        _M_container[safe_index] = __other__[i];
+        safe_index++;
         _M_dynamic_cursor++;
       }
     };
 
     void _Vec_resize_capacity(const size_t __capacity_size_offset__)
     {
-
-      const size_t new_size =
-          (_M_capacity_size + __capacity_size_offset__) * _M_cell_size;
-      this->_M_container = (__CTy *)realloc(_M_container, new_size);
-      _M_capacity_size += __capacity_size_offset__;
+      const size_t new_size = _M_allocator._Alloc_capacity_size + __capacity_size_offset__;
+      this->_M_container = _M_allocator.reallocate(new_size);
     };
 
   public:
@@ -197,11 +190,6 @@ namespace mlib
       ~const_iterator() {};
     };
 
-    vec(const size_t &__container_size__)
-    {
-      _Vec_init_container(__container_size__);
-    };
-
     iterator mbegin() const
     {
       return iterator(_M_container);
@@ -242,6 +230,11 @@ namespace mlib
       return const_reverse_iterator(_M_container - 1);
     }
 
+    vec(const size_t &__container_size__)
+    {
+      _Vec_init_container(__container_size__);
+    };
+
     vec() { _Vec_init_container(__INITIAL_VECTOR_CAPACITY__); };
     bool operator==(const vec &__other__)
     {
@@ -262,6 +255,7 @@ namespace mlib
     {
 
       _Vec_init_container(__elems__.size());
+      std::cout << __elems__.size() << " : " << _M_allocator._Alloc_capacity_size << std::endl;
 
       size_t index = 0;
       for (auto it = __elems__.begin(); it != __elems__.end(); it++)
@@ -276,7 +270,7 @@ namespace mlib
     {
       if (this != &__other__)
       {
-        free(_M_container);
+        clear();
         _Vec_deep_copy(__other__);
       }
       return *this;
@@ -320,19 +314,19 @@ namespace mlib
       return _M_dynamic_cursor == 0;
     }
 
-    void pop_back() noexcept
+    __CTy *pop_back() noexcept
     {
-      if (_M_dynamic_cursor == 0)
+      if (empty())
       {
-        return;
+        return nullptr;
       }
-      --_M_dynamic_cursor;
-      (_M_container + _M_dynamic_cursor)->~__CTy();
+      _M_dynamic_cursor--;
+      return ((_M_dynamic_cursor + 1) + _M_container);
     };
 
     void for_each(std::function<void(__CTy)> __functor__) noexcept
     {
-      for (size_t i = 0; i < _M_capacity_size; i++)
+      for (size_t i = 0; i <= _M_dynamic_cursor; i++)
       {
         __functor__(*(_M_container + i));
       }
@@ -340,6 +334,7 @@ namespace mlib
 
     void clear()
     {
+
       for (auto it = mbegin(); it != mend(); ++it)
       {
         (*it).~__CTy();
@@ -347,9 +342,11 @@ namespace mlib
 
       if (_M_container)
       {
+
         free(_M_container);
         _M_container = nullptr;
       }
+      _M_dynamic_cursor = 0;
     }
 
     void splice(size_t __start__, size_t __num_deletions__, std::initializer_list<__CTy> __args_list__)
@@ -514,22 +511,24 @@ namespace mlib
       _M_dynamic_cursor++;
     };
 
-    size_t size() const { return _M_dynamic_cursor; }
+    size_t size() const
+    {
+      return _M_dynamic_cursor;
+    }
     size_t cursor_byte_size() const noexcept
     {
-      return _M_dynamic_cursor * _M_cell_size;
+      return _M_dynamic_cursor * _M_allocator._Alloc_cell_size;
     };
     size_t capacity_byte_size() const noexcept
     {
-      return _M_capacity_size * _M_cell_size;
+      return _M_allocator._Alloc_capacity_byte_size;
     }
     void push_back(const __CTy &__val__)
     {
-      if (_M_dynamic_cursor >= _M_capacity_size)
+      if (_M_dynamic_cursor >= _M_allocator._Alloc_capacity_size)
       {
         // realloc
-        _M_container =
-            (__CTy *)realloc(_M_container, (++_M_capacity_size) * _M_cell_size);
+        _M_container = _M_allocator.reallocate(++_M_allocator._Alloc_capacity_size);
       }
 
       *(_M_container + _M_dynamic_cursor) = __val__;

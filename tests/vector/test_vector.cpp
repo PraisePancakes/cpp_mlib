@@ -21,6 +21,7 @@ void test_pop()
   auto tlambda = [&t]() -> _vec
   {
     t.input().pop_back();
+    std::cout << t.input().at(t.input().size() - 1);
     return t.input();
   };
 
