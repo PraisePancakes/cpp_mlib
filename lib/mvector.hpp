@@ -2,7 +2,6 @@
 #include <cmath>
 #include <functional>
 #include <iostream>
-#include <vector>
 #include <exception>
 #include <initializer_list>
 #include "miterator.hpp"
@@ -399,7 +398,7 @@ namespace mlib
       if (_M_dynamic_cursor >= _M_allocator._Alloc_capacity_size)
       {
         // realloc
-        _M_container = _M_allocator.reallocate(++_M_allocator._Alloc_capacity_size);
+        _M_container = _M_allocator.reallocate((_M_allocator._Alloc_capacity_size = (_M_allocator._Alloc_capacity_size * 2)));
       }
 
       *(_M_container + _M_dynamic_cursor) = __val__;

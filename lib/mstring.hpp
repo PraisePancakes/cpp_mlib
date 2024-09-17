@@ -4,10 +4,12 @@
 
 namespace mlib
 {
-
+    template <class __Alloc = allocator<char>> // TO:DO convert underlying const alloc to take advantage of this allocator trait
     class string
     {
     private:
+        __Alloc _M_allocator; // TO:DO convert underlying const alloc to take advantage of this allocator trait
+
         struct _underlying_const_alloc
         {
 
@@ -78,143 +80,10 @@ namespace mlib
         };
 
     public:
-        class iterator
-        {
-            char *_Iterator_ptr;
-
-        public:
-            iterator() : _Iterator_ptr(nullptr) {}
-            iterator(char *__iter_loc__) : _Iterator_ptr(__iter_loc__) {}
-
-            bool operator!=(const iterator &other)
-            {
-
-                return _Iterator_ptr != other._Iterator_ptr;
-            };
-
-            iterator &operator++()
-            {
-
-                ++_Iterator_ptr;
-                return *this;
-            }
-            iterator &operator--()
-            {
-
-                --_Iterator_ptr;
-                return *this;
-            }
-
-            char &operator*() const
-            {
-                return *(_Iterator_ptr);
-            };
-            ~iterator() {};
-        };
-
-        class const_iterator
-        {
-            const char *_Iterator_ptr;
-
-        public:
-            const_iterator() : _Iterator_ptr(nullptr) {}
-            const_iterator(const char *__iter_loc__) : _Iterator_ptr(__iter_loc__) {}
-
-            bool operator!=(const const_iterator &other)
-            {
-
-                return _Iterator_ptr != other._Iterator_ptr;
-            };
-
-            const_iterator &operator++()
-            {
-
-                ++_Iterator_ptr;
-                return *this;
-            }
-            const_iterator &operator--()
-            {
-
-                --_Iterator_ptr;
-                return *this;
-            }
-
-            const char &operator*() const
-            {
-                return *(_Iterator_ptr);
-            };
-            ~const_iterator() {};
-        };
-
-        class reverse_iterator
-        {
-
-            char *_Iterator_ptr;
-
-        public:
-            reverse_iterator() : _Iterator_ptr(nullptr) {}
-            reverse_iterator(char *__iter_loc__) : _Iterator_ptr(__iter_loc__) {}
-
-            bool operator!=(const reverse_iterator &other)
-            {
-
-                return _Iterator_ptr != other._Iterator_ptr;
-            };
-
-            reverse_iterator &operator++()
-            {
-
-                --_Iterator_ptr;
-                return *this;
-            }
-            reverse_iterator &operator--()
-            {
-
-                ++_Iterator_ptr;
-                return *this;
-            }
-
-            char &operator*() const
-            {
-                return *(_Iterator_ptr);
-            };
-            ~reverse_iterator() {};
-        };
-
-        class const_reverse_iterator
-        {
-
-            const char *_Iterator_ptr;
-
-        public:
-            const_reverse_iterator() : _Iterator_ptr(nullptr) {}
-            const_reverse_iterator(const char *__iter_loc__) : _Iterator_ptr(__iter_loc__) {}
-
-            bool operator!=(const const_reverse_iterator &other)
-            {
-
-                return _Iterator_ptr != other._Iterator_ptr;
-            };
-
-            const_reverse_iterator &operator++()
-            {
-
-                --_Iterator_ptr;
-                return *this;
-            }
-            const_reverse_iterator &operator--()
-            {
-
-                ++_Iterator_ptr;
-                return *this;
-            }
-
-            const char &operator*() const
-            {
-                return *(_Iterator_ptr);
-            };
-            ~const_reverse_iterator() {};
-        };
+        typedef iterator<char> iterator;
+        typedef const_reverse_iterator<char> const_reverse_iterator;
+        typedef const_iterator<char> const_iterator;
+        typedef reverse_iterator<char> reverse_iterator;
 
         string(const char *__str__)
         {
@@ -249,8 +118,6 @@ namespace mlib
         {
             return _M_modifiable_str[__index__];
         };
-
-        
 
         char *begin() const noexcept
         {

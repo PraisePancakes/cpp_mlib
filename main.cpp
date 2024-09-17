@@ -2,19 +2,32 @@
 #include "lib/mvector.hpp"
 #include "tests/vector/test_vector.hpp"
 #include <vector>
+#include <ctime>
 
 int main()
 {
-  test_vector();
+  // test_vector();
 
-  mlib::vec<int> v{0, 1, 2};
+  mlib::vec<int> v;
+  std::vector<int> v1;
 
-  for (mlib::vec<int>::iterator it = v.mbegin(); it != v.mend(); ++it)
+  std::clock_t begin = clock();
+  for (size_t i = 0; i < 100000; i++)
   {
-    std::cout << *it;
+    v.push_back(1);
   }
+  std::clock_t end = clock();
+  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  std::cout << "mlib push_back time : " << elapsed_secs << std::endl;
 
-  mlib::reverse_iterator<int> it;
+  std::clock_t begin1 = clock();
+  for (size_t i = 0; i < 100000; i++)
+  {
+    v1.push_back(1);
+  }
+  std::clock_t end1 = clock();
+  double elapsed_secs1 = double(end1 - begin1) / CLOCKS_PER_SEC;
+  std::cout << "std push_back time : " << elapsed_secs1 << std::endl;
 
   return 0;
 };
