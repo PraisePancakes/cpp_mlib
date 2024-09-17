@@ -3,10 +3,10 @@
 
 namespace mlib
 {
-    template <typename __STKTYPE>
+    template <typename _STKTYPE>
     class stack
     {
-        mlib::vec<__STKTYPE> _M_container;
+        mlib::vec<_STKTYPE> _M_container;
 
     public:
         stack() {};
@@ -18,11 +18,11 @@ namespace mlib
             return _M_container.size();
         }
 
-        void push(const __STKTYPE &__val__)
+        void push(const _STKTYPE &__val__)
         {
             _M_container.push_back(__val__);
         };
-        __STKTYPE &top() const
+        _STKTYPE &top() const
         {
             if (size() == 0)
             {
