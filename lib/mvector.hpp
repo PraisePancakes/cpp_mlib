@@ -405,6 +405,11 @@ namespace mlib
       _M_dynamic_cursor++;
     };
 
+    size_t capacity() const
+    {
+      return this->_M_allocator._Alloc_capacity_size;
+    }
+
     ~vec()
     {
       clear();
