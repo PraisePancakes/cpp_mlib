@@ -2,14 +2,14 @@
 
 namespace mlib
 {
-    template <typename __CTy>
+    template <typename _CTy>
     class const_reverse_iterator
     {
-        __CTy *_Iterator_ptr;
+        _CTy *_Iterator_ptr;
 
     public:
         const_reverse_iterator() : _Iterator_ptr(nullptr) {};
-        const_reverse_iterator(__CTy *__iter_loc__) : _Iterator_ptr(__iter_loc__) {};
+        const_reverse_iterator(_CTy *_iter_loc_) : _Iterator_ptr(_iter_loc_) {};
         const_reverse_iterator(const const_reverse_iterator &other) = delete;
         const_reverse_iterator(const_reverse_iterator &&other) = delete;
 
@@ -25,7 +25,7 @@ namespace mlib
             return *this;
         }
 
-        const __CTy &operator*()
+        const _CTy &operator*()
         {
             return *(_Iterator_ptr);
         };
@@ -39,14 +39,14 @@ namespace mlib
         ~const_reverse_iterator() {};
     };
 
-    template <typename __CTy>
+    template <typename _CTy>
     class iterator
     {
-        __CTy *_Iterator_ptr;
+        _CTy *_Iterator_ptr;
 
     public:
         iterator() : _Iterator_ptr(nullptr) {}
-        iterator(__CTy *__iter_loc__) : _Iterator_ptr(__iter_loc__) {}
+        iterator(_CTy *_iter_loc_) : _Iterator_ptr(_iter_loc_) {}
 
         bool operator!=(const iterator &other)
         {
@@ -67,21 +67,21 @@ namespace mlib
             return *this;
         }
 
-        __CTy &operator*() const
+        _CTy &operator*() const
         {
             return *(_Iterator_ptr);
         };
         ~iterator() {};
     };
 
-    template <typename __CTy>
+    template <typename _CTy>
     class reverse_iterator
     {
-        __CTy *_Iterator_ptr;
+        _CTy *_Iterator_ptr;
 
     public:
         reverse_iterator() : _Iterator_ptr(nullptr) {};
-        reverse_iterator(__CTy *__iter_loc__) : _Iterator_ptr(__iter_loc__) {};
+        reverse_iterator(_CTy *_iter_loc_) : _Iterator_ptr(_iter_loc_) {};
         reverse_iterator(const reverse_iterator &other) = delete;
         reverse_iterator(reverse_iterator &&other) = delete;
 
@@ -97,7 +97,7 @@ namespace mlib
             return *this;
         }
 
-        __CTy &operator*()
+        _CTy &operator*()
         {
             return *(_Iterator_ptr);
         };
@@ -110,14 +110,14 @@ namespace mlib
         }
     };
 
-    template <typename __CTy>
+    template <typename _CTy>
     class const_iterator
     {
-        __CTy *_Iterator_ptr;
+        _CTy *_Iterator_ptr;
 
     public:
         const_iterator() : _Iterator_ptr(nullptr) {}
-        const_iterator(__CTy *__iter_loc__) : _Iterator_ptr(__iter_loc__) {}
+        const_iterator(_CTy *_iter_loc_) : _Iterator_ptr(_iter_loc_) {}
         const_iterator(const const_iterator &other) = delete;
         const_iterator(const_iterator &&other) = delete;
 
@@ -134,7 +134,7 @@ namespace mlib
             return *this;
         }
 
-        const __CTy &operator*() const
+        const _CTy &operator*() const
         {
             return *(_Iterator_ptr);
         };
