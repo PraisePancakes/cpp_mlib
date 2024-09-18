@@ -1,187 +1,132 @@
 #pragma once
-#include "mvector.hpp"
-#include <string>
+#include "mallocator.hpp"
 
 namespace mlib
 {
-    template <class __Alloc = allocator<char>> // TO:DO convert underlying const alloc to take advantage of this allocator trait
-    class string
+
+    template <typename _CharType>
+    class char_traits;
+
+    template <>
+    class char_traits<char>
     {
-    private:
-        __Alloc _M_allocator; // TO:DO convert underlying const alloc to take advantage of this allocator trait
+        const char *_M_p_underlying;
 
-        struct _underlying_const_alloc
+    public:
+        char_traits(const char *const _data_)
         {
-
-            const char *internal_str;
-            size_t internal_byte_size;
-
-            _underlying_const_alloc()
-            {
-
-                this->internal_byte_size = 0;
-                this->internal_str = nullptr;
-            }
-
-            _underlying_const_alloc(const char *__str__)
-            {
-                internal_str = __str__;
-                internal_byte_size = sizeof(char) * _M_get_size(__str__);
-            }
-
-            void operator=(const char *__other__)
-            {
-                this->internal_str = __other__;
-                this->internal_byte_size = sizeof(char) * _M_get_size(__other__);
-            }
-
-        private:
-            const size_t _M_get_size(const char *__str__) const
-            {
-                size_t i = 0;
-
-                while (__str__[i] != '\0')
-                {
-                    i++;
-                }
-
-                return i + 1;
-            }
+            this->_M_p_underlying = _data_;
         };
 
-        _underlying_const_alloc *_M_internal_str;
-        size_t _M_s_size = 0;
-        char *_M_modifiable_str;
-
-        void _copy_to_modifiable(const _underlying_const_alloc &__str__)
+        char_traits()
         {
+            this->_M_p_underlying = nullptr;
+        };
 
-            const size_t str_size = sizeof(char) * __str__.internal_byte_size;
-
-            _M_modifiable_str = (char *)malloc(str_size);
-            for (size_t i = 0; i < str_size; i++)
+        static size_t length(const char *const _data_)
+        {
+            if (_data_ == nullptr)
             {
-                _M_modifiable_str[i] = __str__.internal_str[i];
+                return 0;
+            }
+            size_t len = 0;
+            const char *pdata = _data_;
+
+            while (*pdata != '\0')
+            {
+                len++;
+                pdata++;
+            };
+
+            pdata = nullptr;
+            return len;
+        };
+
+        static constexpr bool eq(char a, char b) noexcept
+        {
+            return a == b;
+        };
+
+        static char *copy(char *const _dest_, const char *_src_, size_t _n_)
+        {
+            char *pdest = _dest_;
+
+            size_t safe_index = 0;
+            for (size_t i = 0; i < _n_; i++)
+            {
+                pdest[i] = _src_[safe_index];
+                safe_index++;
             }
 
-            _M_s_size = str_size;
+            return _dest_;
         }
 
-        void _perform_deep_copy(const char *__str__)
+        const char *data() const noexcept
         {
-            _M_internal_str = new _underlying_const_alloc(__str__);
-            _copy_to_modifiable(*_M_internal_str);
-        };
+            return _M_p_underlying;
+        }
+    };
 
-        void _perform_deep_copy(const mlib::string &__other__)
+    template <>
+    class char_traits<wchar_t>
+    {
+    public:
+        char_traits() {};
+    };
+
+    template <typename _CharType,
+              typename _CTraits = char_traits<_CharType>,
+              typename _Alloc = allocator<_CharType>>
+    class basic_string
+    {
+        _Alloc _M_allocator;
+        _CTraits _M_traits;
+        _CharType *_M_dc_string;
+        size_t _M_size;
+
+        _CharType *_dc_string(const _CharType *_str_, const size_t _len_)
         {
-            _M_internal_str = new _underlying_const_alloc(__other__.data());
-            _copy_to_modifiable(*_M_internal_str);
+            _CharType *allocated = _M_allocator.allocate(_len_);
+            char_traits<_CharType>::copy(allocated, _str_, _len_);
+            return allocated;
         };
 
     public:
-        typedef iterator<char> iterator;
-        typedef const_reverse_iterator<char> const_reverse_iterator;
-        typedef const_iterator<char> const_iterator;
-        typedef reverse_iterator<char> reverse_iterator;
-
-        string(const char *__str__)
+        basic_string(const _CharType *_str_)
         {
-            _perform_deep_copy(__str__);
+            _M_traits = _str_;
+            _M_size = char_traits<_CharType>::length(_str_);
+            _M_dc_string = _dc_string(_str_, _M_size);
         };
 
-        string()
+        basic_string(const basic_string<_CharType> &_other_)
         {
-            _perform_deep_copy("");
-        };
-
-        string(const mlib::string &__other__)
-        {
-            _perform_deep_copy(__other__);
+            this->_M_traits = _other_._M_dc_string;
+            this->_M_size = _other_.size();
+            this->_M_dc_string = _dc_string(_other_._M_dc_string, _other_.size());
         }
-
-        string(mlib::string &__other__)
-        {
-            _perform_deep_copy(__other__);
-        }
-
-        string(mlib::string &&__other__)
-        {
-            _perform_deep_copy(__other__);
-        }
-        char *data() const
-        {
-            return _M_modifiable_str;
-        }
-
-        char &operator[](size_t __index__)
-        {
-            return _M_modifiable_str[__index__];
-        };
-
-        char *begin() const noexcept
-        {
-            return this->_M_modifiable_str;
-        }
-        char *end() const noexcept
-        {
-            return this->_M_modifiable_str + this->length();
-        }
-
-        mlib::string &append(const mlib::string &__other__)
-        {
-            // get __str__ size
-            this->resize(__other__.length());
-            // helloworld len 10  : '\0' at 11
-            const size_t next_open_cell = this->length() - __other__.length();
-            size_t other_cursor = 0;
-            for (size_t i = next_open_cell; i < this->length(); i++)
-            {
-                this->_M_modifiable_str[i] = __other__.data()[other_cursor];
-                other_cursor++;
-            }
-
-            _M_modifiable_str[this->length()] = '\0';
-
-            // place null terminator at this->length() + 1;
-            return *this;
-        }
-
-        mlib::string &operator+=(const mlib::string &__other__)
-        {
-            return this->append(__other__);
-        }
-
-        friend std::ostream &operator<<(std::ostream &__os__, const mlib::string &__str__)
-        {
-            return __os__ << __str__.data();
-        }
-
-        void resize(const size_t __sz_off__)
-        {
-            this->_M_modifiable_str = (char *)realloc(_M_modifiable_str, this->length() + __sz_off__);
-            this->_M_s_size = this->length() + __sz_off__ + 1;
-        };
-
-        size_t length() const
-        {
-            return this->_M_s_size - 1;
-        };
 
         size_t size() const
         {
-            return this->_M_s_size - 1;
+            return _M_size;
         }
 
-        ~string()
+        size_t length() const
         {
+            return _M_size;
+        }
 
-            delete _M_internal_str;
-            _M_internal_str = nullptr;
-
-            free(_M_modifiable_str);
-            _M_modifiable_str = nullptr;
+        basic_string() {};
+        friend std::ostream &operator<<(std::ostream &_os_, basic_string<_CharType> _bstring_)
+        {
+            return _os_ << _bstring_._M_dc_string;
+        }
+        ~basic_string()
+        {
+            delete _M_dc_string;
         };
     };
 
+    typedef basic_string<char> string;
+    typedef basic_string<wchar_t> wstring;
 };

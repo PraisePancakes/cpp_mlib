@@ -34,13 +34,21 @@ public:
         return _M_pfirst;
     }
 
+    size_t cell_size() const noexcept
+    {
+        return _Alloc_cell_size;
+    }
+
+    size_t capacity() const noexcept
+    {
+        return _Alloc_capacity_size;
+    }
+
+    size_t capacity_byte_size() const noexcept
+    {
+
+        return _Alloc_capacity_byte_size;
+    }
+
     ~allocator() {};
 };
-
-/*
-    template<typename _Ty, class Allocator = allocator<_Ty>>
-    class vec {
-        _Ty _M_pfirst
-        _Allocator
-    };
-*/
