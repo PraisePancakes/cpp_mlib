@@ -51,6 +51,25 @@ namespace mlib
       region_start = nullptr;
     }
 
+    void _init_container(const allocator<value_type> &_alloc_, size_t _n_ = 0)
+    {
+      if (_n_ == 0)
+      {
+        _n_ = _DEF_VECTOR_CAPACITY_;
+        _M_size = 0;
+      }
+      else
+      {
+        _M_size = _n_;
+      }
+
+      _M_capacity = _n_ * _VECTOR_AMORT_GROWTH_FACTOR;
+      pointer region_start = _M_allocator.allocate(_M_capacity);
+      _M_begin = region_start;
+      _M_dyn_cursor = region_start + _M_size; // _M_dyn_cursor moves based on the size
+      region_start = nullptr;
+    }
+
     void _resize(const size_t _capacity_size_offset_)
     {
       const size_t new_size = _M_capacity + _capacity_size_offset_;
@@ -121,9 +140,24 @@ namespace mlib
       return *(_M_begin + _ptr_index_);
     };
 
+    explicit vec(const allocator<value_type> &_alloc_)
+    {
+      _init_container(_alloc_);
+    };
+
+    explicit vec(const allocator<value_type> &_alloc_, size_type _n_)
+    {
+      _init_container(_alloc_, _n_);
+    };
+
     vec()
     {
       _init_container();
+    };
+
+    vec(size_t _n_)
+    {
+      _init_container(_n_);
     };
 
     void for_each(std::function<void(reference)> _functor_) noexcept
@@ -292,6 +326,70 @@ namespace mlib
       }
     };
 
+    mlib::vec<value_type> slice(size_t __start__, size_t __end__)
+    {
+      const int temp_start = __start__;
+      const int temp_end = __end__;
+
+      if (__start__ < 0)
+      {
+        __start__ = 0;
+      }
+
+      if (__end__ >= _M_size)
+      {
+        __end__ = _M_size;
+      }
+
+      if (__start__ > __end__)
+      {
+        __end__ = temp_start;
+        __start__ = temp_end;
+      }
+
+      mlib::vec<value_type> v(__end__ - __start__);
+
+      size_type index = 0;
+      for (size_t i = __start__; i < __end__; i++)
+      {
+        allocator_traits<value_type>::construct(v._M_begin + index, *(_M_begin + i));
+      }
+
+      return v;
+    }
+
+    // mlib::vec<value_type> slice(size_t __start__, size_t __end__)
+    // {
+    //   const int temp_start = __start__;
+    //   const int temp_end = __end__;
+
+    //   if (__start__ < 0)
+    //   {
+    //     __start__ = 0;
+    //   }
+
+    //   if (__end__ >= _M_size)
+    //   {
+    //     __end__ = _M_size;
+    //   }
+
+    //   if (__start__ > __end__)
+    //   {
+    //     __end__ = temp_start;
+    //     __start__ = temp_end;
+    //   }
+
+    //   mlib::vec<value_type> v(__end__ - __start__);
+
+    //   size_type index = 0;
+    //   for (size_t i = __start__; i < __end__; i++)
+    //   {
+    //     allocator_traits<value_type>::construct(v._M_begin + index, *(_M_begin + i));
+    //   }
+
+    //   return v;
+    // }
+
     size_t capacity() const
     {
       return this->_M_capacity;
@@ -316,7 +414,7 @@ namespace mlib
     {
       for (size_type i = 0; i < size(); i++)
       {
-        std::cout << *(_M_begin + i);
+        std::cout << *(_M_begin + i) << " , ";
       }
     };
   };
