@@ -1,54 +1,64 @@
 #pragma once
+#include "memory.h"
 
-template <typename _Ty>
-class allocator
+namespace mlib
 {
-    _Ty *_M_pfirst;
 
-public:
-    size_t _Alloc_cell_size;
-    size_t _Alloc_capacity_size;
-    size_t _Alloc_capacity_byte_size;
-
-    allocator()
+    template <typename _AllocTy>
+    struct allocator
     {
-        _Alloc_cell_size = sizeof(_Ty);
-        _Alloc_capacity_size = 1;
-        _Alloc_capacity_byte_size = _Alloc_cell_size * _Alloc_capacity_size;
+
+        typedef _AllocTy *_ATy_pointer;
+        typedef const _AllocTy *_ATy_const_pointer;
+        typedef _AllocTy _ATy_value;
+        typedef _AllocTy &_ATy_reference;
+        typedef const _AllocTy &_ATy_const_reference;
+
+        allocator() noexcept {};
+        allocator(const allocator<_AllocTy> &_other_) noexcept {};
+
+        template <typename _OtherAllocTy>
+        allocator(const allocator<_OtherAllocTy> &_other_) noexcept;
+
+        _ATy_pointer allocate(size_t _n_)
+        {
+            _ATy_pointer alloc_block = (_ATy_pointer)malloc(_n_ * sizeof(_ATy_value));
+            if (!alloc_block)
+            {
+                return nullptr;
+            };
+            return alloc_block;
+        };
+
+        _ATy_pointer reallocate(_ATy_pointer _old_, size_t _n_)
+        {
+            _old_ = (_ATy_pointer)realloc(_old_, _n_ * sizeof(_ATy_value));
+            return _old_;
+        }
+
+        template <class _T, class... _FwdArgs>
+        void construct(_T *_loc_, _FwdArgs &&..._args_)
+        {
+            ::new (_loc_) _T(std::forward<_FwdArgs>(_args_)...);
+        };
+
+        template <class _T>
+        void destroy(_T *_loc_)
+        {
+            _loc_->~_T();
+        }
+
+        void deallocate(_ATy_pointer _region_)
+        {
+            free(_region_);
+        };
+
+        _ATy_pointer address(_ATy_reference _ref_) noexcept
+        {
+            return &_ref_;
+        };
+
+        ~allocator() noexcept {};
     };
-    _Ty *allocate(const size_t __alloc_size__)
-    {
-        _Alloc_capacity_size = __alloc_size__;
-        const size_t new_size = _Alloc_capacity_size * _Alloc_cell_size;
-        _Alloc_capacity_byte_size = new_size;
-        _M_pfirst = (_Ty *)malloc(new_size);
-        return _M_pfirst;
-    };
 
-    _Ty *reallocate(const size_t __realloc_size__)
-    {
-        _Alloc_capacity_size = __realloc_size__;
-        const size_t new_size = _Alloc_capacity_size * _Alloc_cell_size;
-        _Alloc_capacity_byte_size = new_size;
-        _M_pfirst = (_Ty *)realloc(_M_pfirst, new_size);
-        return _M_pfirst;
-    }
-
-    size_t cell_size() const noexcept
-    {
-        return _Alloc_cell_size;
-    }
-
-    size_t capacity() const noexcept
-    {
-        return _Alloc_capacity_size;
-    }
-
-    size_t capacity_byte_size() const noexcept
-    {
-
-        return _Alloc_capacity_byte_size;
-    }
-
-    ~allocator() {};
-};
+}

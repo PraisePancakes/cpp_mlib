@@ -79,52 +79,16 @@ namespace mlib
               typename _Alloc = allocator<_CharType>>
     class basic_string
     {
-        _Alloc _M_allocator;
-        _CTraits _M_traits;
-        _CharType *_M_dc_string;
-        size_t _M_size;
+        typedef _CharType char_type;
+        typedef _CTraits char_traits;
+        typedef _Alloc allocator_type;
+        typedef _CharType *pointer;
+        typedef const _CharType *const_pointer;
+        typedef char_type &reference;
+        typedef const char_type &const_reference;
 
-        _CharType *_dc_string(const _CharType *_str_, const size_t _len_)
-        {
-            _CharType *allocated = _M_allocator.allocate(_len_);
-            char_traits<_CharType>::copy(allocated, _str_, _len_);
-            return allocated;
-        };
-
-    public:
-        basic_string(const _CharType *_str_)
-        {
-            _M_traits = _str_;
-            _M_size = char_traits<_CharType>::length(_str_);
-            _M_dc_string = _dc_string(_str_, _M_size);
-        };
-
-        basic_string(const basic_string<_CharType> &_other_)
-        {
-            this->_M_traits = _other_._M_dc_string;
-            this->_M_size = _other_.size();
-            this->_M_dc_string = _dc_string(_other_._M_dc_string, _other_.size());
-        }
-
-        size_t size() const
-        {
-            return _M_size;
-        }
-
-        size_t length() const
-        {
-            return _M_size;
-        }
-
-        basic_string() {};
-        friend std::ostream &operator<<(std::ostream &_os_, basic_string<_CharType> _bstring_)
-        {
-            return _os_ << _bstring_._M_dc_string;
-        }
-        ~basic_string()
-        {
-            delete _M_dc_string;
-        };
+        typedef std::ptrdiff_t difference_type;
+        typedef std::size_t size_type;
     };
 
     typedef basic_string<char> string;

@@ -10,9 +10,9 @@ add_executable(
     lib/mvector.hpp
     lib/mstack.hpp
     lib/mtest.hpp
- 
+    lib/mallocator.hpp
     lib/mstring.hpp
-    tests/vector/test_vector.cpp
+   
     )
 
 
