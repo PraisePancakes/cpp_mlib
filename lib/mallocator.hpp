@@ -96,7 +96,6 @@ namespace mlib
         {
             if (_loc_ == nullptr)
             {
-                std::cout << "null";
                 return;
             }
             ::new (_loc_) _T(std::forward<_FwdArgs>(_args_)...);

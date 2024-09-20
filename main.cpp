@@ -12,7 +12,9 @@ int main()
   {
     v.push_back(1);
   }
-  v.push_back({0, 1, 2});
+  int x = 4;
+  
+  v.push_back({0, 1, 2, x});
   v.print();
 
   return 0;
