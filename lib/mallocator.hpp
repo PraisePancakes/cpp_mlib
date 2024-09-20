@@ -67,7 +67,7 @@ namespace mlib
         allocator(const allocator<_AllocTy> &_other_) noexcept {};
 
         template <typename _OtherAllocTy>
-        allocator(const allocator<_OtherAllocTy> &_other_) noexcept;
+        allocator(const allocator<_OtherAllocTy> &_other_) noexcept {};
 
         _ATy_pointer allocate(size_t _n_)
         {
@@ -81,13 +81,24 @@ namespace mlib
 
         _ATy_pointer reallocate(_ATy_pointer _old_, size_t _n_)
         {
-            _old_ = (_ATy_pointer)realloc(_old_, _n_ * sizeof(_ATy_value));
+            _ATy_pointer new_block = (_ATy_pointer)realloc(_old_, _n_ * sizeof(_ATy_value));
+            if (new_block == nullptr)
+            {
+                return _old_;
+            }
+
+            _old_ = new_block;
             return _old_;
         }
 
         template <class _T, class... _FwdArgs>
         void construct(_T *_loc_, _FwdArgs &&..._args_)
         {
+            if (_loc_ == nullptr)
+            {
+                std::cout << "null";
+                return;
+            }
             ::new (_loc_) _T(std::forward<_FwdArgs>(_args_)...);
         };
 

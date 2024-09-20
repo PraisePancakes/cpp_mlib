@@ -1,5 +1,6 @@
 #pragma once
 #include "mallocator.hpp"
+#define _DEF_STR_CAPACITY 1
 
 namespace mlib
 {
@@ -10,19 +11,8 @@ namespace mlib
     template <>
     class char_traits<char>
     {
-        const char *_M_p_underlying;
 
     public:
-        char_traits(const char *const _data_)
-        {
-            this->_M_p_underlying = _data_;
-        };
-
-        char_traits()
-        {
-            this->_M_p_underlying = nullptr;
-        };
-
         static size_t length(const char *const _data_)
         {
             if (_data_ == nullptr)
@@ -60,11 +50,6 @@ namespace mlib
 
             return _dest_;
         }
-
-        const char *data() const noexcept
-        {
-            return _M_p_underlying;
-        }
     };
 
     template <>
@@ -89,6 +74,13 @@ namespace mlib
 
         typedef std::ptrdiff_t difference_type;
         typedef std::size_t size_type;
+
+        allocator_type _M_allocator;
+
+    public:
+        basic_string() {
+            
+        };
     };
 
     typedef basic_string<char> string;

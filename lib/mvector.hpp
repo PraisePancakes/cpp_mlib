@@ -29,26 +29,13 @@ namespace mlib
 
     size_type _M_capacity;
     pointer _M_begin;
-    pointer _M_dyn_cursor;
     size_type _M_size;
 
     void _init_container(size_type _n_ = 0)
     {
-      if (_n_ == 0)
-      {
-        _n_ = _DEF_VECTOR_CAPACITY_;
-        _M_size = 0;
-      }
-      else
-      {
-        _M_size = _n_;
-      }
-
-      _M_capacity = _n_ * _VECTOR_AMORT_GROWTH_FACTOR;
-      pointer region_start = _M_allocator.allocate(_M_capacity);
-      _M_begin = region_start;
-      _M_dyn_cursor = region_start + _M_size; // _M_dyn_cursor moves based on the size
-      region_start = nullptr;
+      _M_size = 0;
+      _M_capacity = 0;
+      _M_begin = nullptr;
     }
 
     void _init_container(const allocator<value_type> &_alloc_, size_t _n_ = 0)
@@ -66,7 +53,6 @@ namespace mlib
       _M_capacity = _n_ * _VECTOR_AMORT_GROWTH_FACTOR;
       pointer region_start = _alloc_.allocate(_M_capacity);
       _M_begin = region_start;
-      _M_dyn_cursor = region_start + _M_size; // _M_dyn_cursor moves based on the size
       region_start = nullptr;
     }
 
@@ -178,14 +164,63 @@ namespace mlib
 
       if (size() >= _M_capacity)
       {
-        _M_allocator.reallocate(_M_begin, _M_capacity * _VECTOR_AMORT_GROWTH_FACTOR);
+        _M_capacity = (_M_capacity + 1) * _VECTOR_AMORT_GROWTH_FACTOR;
+        _M_begin = _M_allocator.reallocate(_M_begin, _M_capacity);
       }
 
-      _M_allocator.construct(_M_begin + (_M_size++), _v_);
-      _M_dyn_cursor++;
+      _M_allocator.construct(_M_begin + (_M_size), _v_);
+      _M_size++;
     }
 
-    void clear()
+    /*
+      @function
+        push_back
+
+      @args
+        rvalue reference to _v_
+
+      @brief
+        push_back must enforce a growth factor of 2, the constant growth factor ensures the behavior of the respective allocators capacity follows constant amortized time.
+        where the operations can be expressed as such :
+
+        insertion => O(1)
+        expensive_realloc => if insertion position = 2n : O(2n)
+        insertion => O(1)
+        expensive_realloc => if insertion position = 2n : O(2n)
+        ...
+        where n is the size of the vector, with each realloc it will take twice as long to compute but it will also take twice as long to reach the execution of this operation
+        which means on average it will take O(n) time to reach the expensive operations, yet the time it takes to reach that operation will always be 2 x previous_time
+        meaning with larger sets we have less expensive operations
+
+        in the case that we have an rvalue reference, we simply move that value through perfect forwarded template param in the allocator method allocator::construct which takes an
+        rvalue reference to a parameter pack of args.
+
+    */
+
+    void push_back(reference &_v_)
+    {
+
+      if (size() >= _M_capacity)
+      {
+        _M_capacity = (_M_capacity + 1) * _VECTOR_AMORT_GROWTH_FACTOR;
+        _M_begin = _M_allocator.reallocate(_M_begin, _M_capacity);
+      }
+
+      _M_allocator.construct(_M_begin + (_M_size), _v_);
+      _M_size++;
+    }
+
+    void push_back(std::initializer_list<value_type> _args_)
+    {
+
+      for (auto it = _args_.begin(); it != _args_.end(); ++it)
+      {
+        push_back(*it);
+      }
+    }
+
+    void
+    clear()
     {
 
       for (size_t i = 0; i < _M_size; i++)
@@ -418,5 +453,4 @@ namespace mlib
       }
     };
   };
-
 }; // namespace mlib
