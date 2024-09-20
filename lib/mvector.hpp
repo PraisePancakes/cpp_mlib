@@ -64,7 +64,7 @@ namespace mlib
       }
 
       _M_capacity = _n_ * _VECTOR_AMORT_GROWTH_FACTOR;
-      pointer region_start = _M_allocator.allocate(_M_capacity);
+      pointer region_start = _alloc_.allocate(_M_capacity);
       _M_begin = region_start;
       _M_dyn_cursor = region_start + _M_size; // _M_dyn_cursor moves based on the size
       region_start = nullptr;
@@ -178,7 +178,7 @@ namespace mlib
 
       if (size() >= _M_capacity)
       {
-        _M_allocator.reallocate(_M_begin, _M_capacity * _DEF_VECTOR_CAPACITY_);
+        _M_allocator.reallocate(_M_begin, _M_capacity * _VECTOR_AMORT_GROWTH_FACTOR);
       }
 
       _M_allocator.construct(_M_begin + (_M_size++), _v_);
