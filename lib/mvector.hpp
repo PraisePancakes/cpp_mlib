@@ -6,22 +6,56 @@
 #include <initializer_list>
 #include <cstddef>
 #include "mallocator.hpp"
+#include "miterator.hpp"
 
 #define _DEF_VECTOR_CAPACITY_ 1
 #define _VECTOR_AMORT_GROWTH_FACTOR 2
 
 namespace mlib
 {
+
   template <typename _Ty, class _Alloc = allocator<_Ty>>
-  class vec
+  struct vec_base
+  {
+    typedef typename allocator_traits<_Ty>::pointer pointer;
+
+    struct impl_data
+    {
+      pointer _M_region_start;
+      pointer _M_region_end;
+      pointer _M_region_capacity;
+
+      impl_data() : _M_region_capacity(nullptr), _M_region_end(nullptr), _M_region_start(nullptr) {};
+
+      impl_data(impl_data &&_other_) : _M_region_start(_other_._M_region_start),
+                                       _M_region_end(_other_._M_region_end),
+                                       _M_region_capacity(_other_._M_region_capacity)
+      {
+        _other_._M_region_capacity = _other_._M_region_start = _other_._M_region_end = pointer();
+      }
+
+      void _copy_data(const impl_data &_other_)
+      {
+        _M_region_capacity = _other_._M_region_capacity;
+        _M_region_end = _other_._M_region_end;
+        _M_region_start = _other_._M_region_start;
+      };
+    };
+
+    impl_data _M_impl;
+  };
+
+  template <typename _Ty, class _Alloc = allocator<_Ty>>
+  class vec : protected vec_base<_Ty, _Alloc>
   {
     typedef _Ty value_type;
+    typedef vec_base<_Ty, _Alloc> base;
+    typedef typename base::pointer pointer;
     typedef _Alloc allocator_type;
-    typedef value_type &reference;
-    typedef const value_type &const_reference;
-    typedef value_type *pointer;
-    typedef const value_type *const_pointer;
-
+    typedef allocator_traits<_Ty> allocator_traits;
+    typedef typename allocator_traits::const_pointer const_pointer;
+    typedef typename allocator_traits::const_reference const_reference;
+    typedef typename allocator_traits::reference reference;
     typedef std::ptrdiff_t difference_type;
     typedef std::size_t size_type;
 
@@ -33,13 +67,12 @@ namespace mlib
 
     void _init_container(size_type _n_ = 0)
     {
-      _M_size = 0;
-      _M_capacity = 0;
-      _M_begin = nullptr;
+      _init_container(_M_allocator, _n_);
     }
 
-    void _init_container(const allocator<value_type> &_alloc_, size_t _n_ = 0)
+    void _init_container(allocator<value_type> &_alloc_, size_t _n_ = 0)
     {
+
       if (_n_ == 0)
       {
         _n_ = _DEF_VECTOR_CAPACITY_;
@@ -56,7 +89,7 @@ namespace mlib
       region_start = nullptr;
     }
 
-    void _resize(const size_t _capacity_size_offset_)
+    void _resize_by_offset(const size_t _capacity_size_offset_)
     {
       const size_t new_size = _M_capacity + _capacity_size_offset_;
       this->_M_begin = _M_allocator.reallocate(_M_begin, new_size);
@@ -101,6 +134,7 @@ namespace mlib
       size_t index = 0;
       for (auto it = _elems_.begin(); it != _elems_.end(); it++)
       {
+
         _M_allocator.construct(_M_begin + index, *it);
         index++;
       }
@@ -176,7 +210,7 @@ namespace mlib
       @function
         push_back
 
-      @args
+      @params
         rvalue reference to _v_
 
       @brief
@@ -215,6 +249,7 @@ namespace mlib
 
       for (auto it = _args_.begin(); it != _args_.end(); ++it)
       {
+
         push_back(*it);
       }
     }
@@ -238,7 +273,7 @@ namespace mlib
     void insert(size_t index, const_reference value)
     {
 
-      _resize(1);
+      _resize_by_offset(1);
 
       size_t shift_index = _M_size;
 
@@ -387,7 +422,7 @@ namespace mlib
       size_type index = 0;
       for (size_t i = __start__; i < __end__; i++)
       {
-        allocator_traits<value_type>::construct(v._M_begin + index, *(_M_begin + i));
+        allocator_traits::construct(v._M_begin + index, *(_M_begin + i));
       }
 
       return v;

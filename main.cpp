@@ -7,15 +7,10 @@
 
 int main()
 {
-  mlib::vec<int> v;
-  for (size_t i = 0; i < 5; i++)
-  {
-    v.push_back(1);
-  }
-  int x = 4;
-  
-  v.push_back({0, 1, 2, x});
+  mlib::vec<int> v{0, 1, 2};
+  v.push_back(4);
+  v.pop_back();
+  v.push_back(5);
   v.print();
-
   return 0;
 }
