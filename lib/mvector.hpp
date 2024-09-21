@@ -26,7 +26,7 @@ namespace mlib
       pointer _M_region_capacity;
 
       impl_data() : _M_region_capacity(nullptr), _M_region_end(nullptr), _M_region_start(nullptr) {};
-
+      impl_data(pointer _s_, pointer _e_, pointer _c_) : _M_region_capacity(_c_), _M_region_end(_e_), _M_region_start(_s_) {};
       impl_data(impl_data &&_other_) : _M_region_start(_other_._M_region_start),
                                        _M_region_end(_other_._M_region_end),
                                        _M_region_capacity(_other_._M_region_capacity)
@@ -40,6 +40,13 @@ namespace mlib
         _M_region_end = _other_._M_region_end;
         _M_region_start = _other_._M_region_start;
       };
+
+      ~impl_data()
+      {
+        _M_region_start = nullptr;
+        _M_region_capacity = nullptr;
+        _M_region_end = nullptr;
+      };
     };
 
     impl_data _M_impl;
@@ -50,9 +57,10 @@ namespace mlib
   {
     typedef _Ty value_type;
     typedef vec_base<_Ty, _Alloc> base;
-    typedef typename base::pointer pointer;
+
     typedef _Alloc allocator_type;
     typedef allocator_traits<_Ty> allocator_traits;
+    typedef typename base::pointer pointer;
     typedef typename allocator_traits::const_pointer const_pointer;
     typedef typename allocator_traits::const_reference const_reference;
     typedef typename allocator_traits::reference reference;
@@ -60,7 +68,7 @@ namespace mlib
     typedef std::size_t size_type;
 
     allocator_type _M_allocator;
-
+    base _M_base; // retreive implementation iterators
     size_type _M_capacity;
     pointer _M_begin;
     size_type _M_size;
@@ -85,7 +93,12 @@ namespace mlib
 
       _M_capacity = _n_ * _VECTOR_AMORT_GROWTH_FACTOR;
       pointer region_start = _alloc_.allocate(_M_capacity);
+
       _M_begin = region_start;
+
+      typename base::impl_data a(_M_begin, _M_begin + _M_capacity, _M_begin + _M_capacity);
+      _M_base._M_impl._copy_data(a);
+
       region_start = nullptr;
     }
 
@@ -145,7 +158,7 @@ namespace mlib
       return *(_M_begin + _ptr_index_);
     };
 
-    reference &at(difference_type _ptr_index_) const
+    reference &at(size_type _ptr_index_) const
     {
       // bound check
       if (_ptr_index_ < 0)
