@@ -57,9 +57,9 @@ namespace mlib
   {
     typedef _Ty value_type;
     typedef vec_base<_Ty, _Alloc> base;
-
     typedef _Alloc allocator_type;
     typedef allocator_traits<_Ty> allocator_traits;
+
     typedef typename base::pointer pointer;
     typedef typename allocator_traits::const_pointer const_pointer;
     typedef typename allocator_traits::const_reference const_reference;
@@ -71,6 +71,8 @@ namespace mlib
     base _M_base; // retreive implementation iterators
     size_type _M_capacity;
     pointer _M_begin;
+    pointer _M_end;
+    pointer _M_cap;
     size_type _M_size;
 
     void _init_container(size_type _n_ = 0)
@@ -94,10 +96,11 @@ namespace mlib
       _M_capacity = _n_ * _VECTOR_AMORT_GROWTH_FACTOR;
       pointer region_start = _alloc_.allocate(_M_capacity);
 
-      _M_begin = region_start;
-
-      typename base::impl_data a(_M_begin, _M_begin + _M_capacity, _M_begin + _M_capacity);
+      typename base::impl_data a(region_start, region_start + _M_capacity, region_start + _M_capacity);
       _M_base._M_impl._copy_data(a);
+      _M_begin = _M_base._M_impl._M_region_start;
+      _M_end = _M_base._M_impl._M_region_end;
+      _M_cap = _M_base._M_impl._M_region_capacity;
 
       region_start = nullptr;
     }

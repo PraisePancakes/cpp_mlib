@@ -3,6 +3,10 @@
 
 namespace mlib
 {
+    struct random_access_tag
+    {
+    };
+
     template <typename _Ty>
     struct iterator_traits
     {
@@ -29,6 +33,51 @@ namespace mlib
         typedef _ITDistance difference_type;
         typedef _ITPointer pointer;
         typedef _ITConstPointer const_pointer;
+    };
+
+    template <class _Iter>
+    struct normal_iterator : public iterator<random_access_tag, _Iter>
+    {
+    protected:
+        typedef iterator_traits<_Iter> _traits;
+
+    public:
+        typedef typename _traits::pointer pointer;
+        typedef typename _traits::reference reference;
+        typedef typename _traits::difference_type difference_type;
+        typedef typename iterator_traits<_Iter>::value_type value_type;
+        typedef typename iterator_traits<_Iter>::category category;
+
+        pointer _pit;
+
+        normal_iterator() : _pit() {};
+        normal_iterator(pointer _loc_) : _pit(_loc_) {}
+
+        reference operator[](difference_type _i_) const noexcept
+        {
+            return *(_pit + _i_);
+        }
+
+        normal_iterator &operator++()
+        {
+            ++_pit;
+            return *this;
+        };
+
+        bool operator!=(const normal_iterator &_other_)
+        {
+            return _pit != _other_._pit;
+        }
+
+        bool operator==(const normal_iterator &_other_)
+        {
+            return _pit == _other_._pit;
+        }
+
+        ~normal_iterator()
+        {
+            _pit = nullptr;
+        };
     };
 
 }

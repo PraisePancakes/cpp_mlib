@@ -11,6 +11,7 @@ add_executable(
     lib/mstack.hpp
     lib/mtest.hpp
     lib/mallocator.hpp
+    lib/miterator.hpp
     lib/mstring.hpp
    
     )

@@ -8,7 +8,7 @@
 int main()
 {
   mlib::vec<int> v;
-  v.push_back(4);
+  v.push_back({3, 4, 5});
   v.print();
   return 0;
 }
