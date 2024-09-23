@@ -14,18 +14,38 @@ namespace mlib
         typedef _AllocTy &reference;
         typedef const _AllocTy &const_reference;
         typedef size_t size_type;
+        typedef std::ptrdiff_t difference_type;
 
         static pointer allocate(size_t _n_)
         {
             pointer alloc_block = (pointer)malloc(_n_ * sizeof(value_type));
             if (!alloc_block)
             {
+                std::cout << "null";
                 return nullptr;
             };
             return alloc_block;
         };
 
-        static pointer reallocate(pointer _old_, size_type _n_)
+        static void allocate_at(pointer &_loc_, difference_type _n_)
+        {
+            _loc_ = (pointer)malloc(_n_ * sizeof(value_type));
+            if (!_loc_)
+            {
+                _loc_ = nullptr;
+            }
+        }
+
+        static void reallocate_at(pointer &_loc_, difference_type _n_)
+        {
+            _loc_ = (pointer)realloc(_loc_, _n_ * sizeof(value_type));
+            if (!_loc_)
+            {
+                _loc_ = nullptr;
+            }
+        }
+
+        static pointer reallocate(pointer _old_, difference_type _n_)
         {
             _old_ = (pointer)realloc(_old_, _n_ * sizeof(value_type));
             return _old_;

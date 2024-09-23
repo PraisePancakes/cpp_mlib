@@ -23,11 +23,13 @@ namespace mlib
         typedef _Ty value_type;
         typedef value_type *pointer;
         typedef const value_type *const_pointer;
+        typedef size_t difference_type;
     };
 
     template <class _ITCategory, class _T, class _ITDistance = std::ptrdiff_t, class _ITPointer = _T *, class _ITConstPointer = const _T *>
     struct iterator
     {
+
         typedef _T value_type;
         typedef _ITCategory category;
         typedef _ITDistance difference_type;
@@ -42,11 +44,11 @@ namespace mlib
         typedef iterator_traits<_Iter> _traits;
 
     public:
+        typedef typename _traits::value_type value_type;
         typedef typename _traits::pointer pointer;
-        typedef typename _traits::reference reference;
+        typedef value_type &reference;
         typedef typename _traits::difference_type difference_type;
-        typedef typename iterator_traits<_Iter>::value_type value_type;
-        typedef typename iterator_traits<_Iter>::category category;
+        typedef typename iterator<random_access_tag, _Iter>::category category;
 
         pointer _pit;
 
@@ -60,8 +62,13 @@ namespace mlib
 
         normal_iterator &operator++()
         {
-            ++_pit;
+            _pit++;
             return *this;
+        };
+
+        reference operator*()
+        {
+            return *_pit;
         };
 
         bool operator!=(const normal_iterator &_other_)

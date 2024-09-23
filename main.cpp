@@ -7,8 +7,13 @@
 
 int main()
 {
-  mlib::vec<int> v;
-  v.push_back({3, 4, 5});
-  v.print();
+
+  mlib::vec<int> v{1, 2, 3};
+
+  for (auto i = v.mbegin(); i != v.mend(); ++i)
+  {
+    std::cout << *i;
+  }
+
   return 0;
 }

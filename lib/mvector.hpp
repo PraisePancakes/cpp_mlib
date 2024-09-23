@@ -34,11 +34,42 @@ namespace mlib
         _other_._M_region_capacity = _other_._M_region_start = _other_._M_region_end = pointer();
       }
 
+      impl_data(const impl_data &_other_)
+      {
+        _M_region_capacity = _other_._M_region_capacity;
+        _M_region_end = _other_._M_region_end;
+        _M_region_start = _other_._M_region_start;
+      }
+
+      impl_data &operator=(const impl_data &_other_)
+      {
+        _M_region_capacity = _other_._M_region_capacity;
+        _M_region_end = _other_._M_region_end;
+        _M_region_start = _other_._M_region_start;
+        return *this;
+      }
+
       void _copy_data(const impl_data &_other_)
       {
         _M_region_capacity = _other_._M_region_capacity;
         _M_region_end = _other_._M_region_end;
         _M_region_start = _other_._M_region_start;
+      };
+
+      void _copy_data(pointer _s_, pointer _c_)
+      {
+        if (_s_ == nullptr)
+        {
+          std::cout << "null";
+        }
+
+        if (_c_ == nullptr)
+        {
+          std::cout << "null";
+        }
+        _M_region_start = _s_;
+        _M_region_end = _s_;
+        _M_region_capacity = _c_;
       };
 
       ~impl_data()
@@ -50,6 +81,19 @@ namespace mlib
     };
 
     impl_data _M_impl;
+
+    vec_base() {}
+
+    vec_base(const vec_base &_other_)
+    {
+      this->_M_impl = _other_._M_impl;
+    };
+
+    vec_base &operator=(const vec_base &_other_)
+    {
+      this->_M_impl = _other_._M_impl;
+      return *this;
+    }
   };
 
   template <typename _Ty, class _Alloc = allocator<_Ty>>
@@ -60,55 +104,42 @@ namespace mlib
     typedef _Alloc allocator_type;
     typedef allocator_traits<_Ty> allocator_traits;
 
+  public:
     typedef typename base::pointer pointer;
     typedef typename allocator_traits::const_pointer const_pointer;
     typedef typename allocator_traits::const_reference const_reference;
     typedef typename allocator_traits::reference reference;
     typedef std::ptrdiff_t difference_type;
     typedef std::size_t size_type;
+    typedef mlib::normal_iterator<pointer> iterator;
+    typedef mlib::normal_iterator<const_pointer> const_iterator;
 
-    allocator_type _M_allocator;
-    base _M_base; // retreive implementation iterators
-    size_type _M_capacity;
-    pointer _M_begin;
-    pointer _M_end;
-    pointer _M_cap;
-    size_type _M_size;
+  private:
+    typename base::impl_data _M_impl; // retreive implementation iterators
+    base _M_base;
 
-    void _init_container(size_type _n_ = 0)
+    void _init_container(difference_type _n_ = 0)
     {
-      _init_container(_M_allocator, _n_);
-    }
-
-    void _init_container(allocator<value_type> &_alloc_, size_t _n_ = 0)
-    {
-
       if (_n_ == 0)
       {
         _n_ = _DEF_VECTOR_CAPACITY_;
-        _M_size = 0;
-      }
-      else
-      {
-        _M_size = _n_;
       }
 
-      _M_capacity = _n_ * _VECTOR_AMORT_GROWTH_FACTOR;
-      pointer region_start = _alloc_.allocate(_M_capacity);
-
-      typename base::impl_data a(region_start, region_start + _M_capacity, region_start + _M_capacity);
-      _M_base._M_impl._copy_data(a);
-      _M_begin = _M_base._M_impl._M_region_start;
-      _M_end = _M_base._M_impl._M_region_end;
-      _M_cap = _M_base._M_impl._M_region_capacity;
-
-      region_start = nullptr;
+      difference_type capacity = _n_ * _VECTOR_AMORT_GROWTH_FACTOR;
+      _M_impl._copy_data(std::move(allocator_traits::allocate(capacity)), _M_impl._M_region_start + capacity);
     }
 
-    void _resize_by_offset(const size_t _capacity_size_offset_)
+    void _init_container(const vec_base<value_type> &_other_)
     {
-      const size_t new_size = _M_capacity + _capacity_size_offset_;
-      this->_M_begin = _M_allocator.reallocate(_M_begin, new_size);
+
+      this->_M_impl = _other_._M_impl;
+    }
+
+    void _resize_by_offset(const difference_type _capacity_size_offset_)
+    {
+      _M_impl._M_region_capacity = _M_impl._M_region_capacity + _capacity_size_offset_;
+
+      allocator_traits::reallocate_at(_M_impl._M_region_start, _M_impl._M_region_capacity - _M_impl._M_region_start);
     };
 
     void _deep_copy(const vec &_other_)
@@ -117,18 +148,41 @@ namespace mlib
       size_t safe_idx = 0;
       for (size_type i = 0; i < size(); i++)
       {
-        _M_allocator.construct(_M_begin + i, _other_[safe_idx]);
+        allocator_traits::construct(_M_impl._M_region_start + i, _other_[safe_idx]);
       }
     }
 
   public:
+    vec()
+    {
+      _init_container();
+    };
+
+    vec(size_t _n_)
+    {
+      _init_container(_n_);
+    };
+
+    vec(const vec_base<value_type> _other_)
+    {
+      this->_init_container(_other_);
+      this->_M_base = _other_;
+    }
+
+    vec(const vec<value_type> &_other_)
+    {
+      this->_M_impl = _other_._M_impl;
+      this->_M_base = _other_._M_base;
+    }
+
     explicit vec(size_type _n_, const value_type &_v_)
     {
       _init_container(_n_);
 
       for (size_type i = 0; i < size(); i++)
       {
-        _M_allocator.construct(_M_begin + i, _v_);
+        allocator_traits::construct(_M_impl._M_region_start + i, _v_);
+        _M_impl._M_region_end++;
       }
     }
 
@@ -147,33 +201,12 @@ namespace mlib
 
       _init_container(_elems_.size());
 
-      size_t index = 0;
       for (auto it = _elems_.begin(); it != _elems_.end(); it++)
       {
+        allocator_traits::construct(_M_impl._M_region_start + size(), *it);
 
-        _M_allocator.construct(_M_begin + index, *it);
-        index++;
+        _M_impl._M_region_end++;
       }
-    };
-
-    reference operator[](difference_type _ptr_index_) const
-    {
-      return *(_M_begin + _ptr_index_);
-    };
-
-    reference &at(size_type _ptr_index_) const
-    {
-      // bound check
-      if (_ptr_index_ < 0)
-      {
-        throw std::out_of_range("\nIndex succeeded left bound with underflowed range index, out of range");
-      }
-      if (_ptr_index_ >= _M_size)
-      {
-        throw std::out_of_range("\nIndex succeeded right bound with overflowed range index, out of range ");
-      }
-
-      return *(_M_begin + _ptr_index_);
     };
 
     explicit vec(const allocator<value_type> &_alloc_)
@@ -186,40 +219,51 @@ namespace mlib
       _init_container(_alloc_, _n_);
     };
 
-    vec()
+    reference operator[](difference_type _ptr_index_) const
     {
-      _init_container();
+      return *(_M_impl._M_region_start + _ptr_index_);
     };
 
-    vec(size_t _n_)
+    reference &at(size_type _ptr_index_) const
     {
-      _init_container(_n_);
+      // bound check
+      if (_ptr_index_ < 0)
+      {
+        throw std::out_of_range("\nIndex succeeded left bound with underflowed range index, out of range");
+      }
+      if (_ptr_index_ >= size())
+      {
+        throw std::out_of_range("\nIndex succeeded right bound with overflowed range index, out of range ");
+      }
+
+      return *(_M_impl._M_region_start + _ptr_index_);
     };
 
     void for_each(std::function<void(reference)> _functor_) noexcept
     {
-      for (size_t i = 0; i < _M_size; i++)
+      for (size_t i = 0; i < size(); i++)
       {
-        _functor_(*(_M_begin + i));
+        _functor_(*(_M_impl._M_region_start + i));
       }
     };
 
     bool empty() const
     {
-      return _M_size == 0;
+      return size() == 0;
     }
 
     void push_back(const_reference _v_)
     {
 
-      if (size() >= _M_capacity)
+      if (_M_impl._M_region_end == _M_impl._M_region_capacity)
       {
-        _M_capacity = (_M_capacity + 1) * _VECTOR_AMORT_GROWTH_FACTOR;
-        _M_begin = _M_allocator.reallocate(_M_begin, _M_capacity);
+
+        _M_impl._M_region_capacity = _M_impl._M_region_capacity + ((_M_impl._M_region_capacity - _M_impl._M_region_end) * _VECTOR_AMORT_GROWTH_FACTOR);
+        _resize_by_offset(_M_impl._M_region_capacity - _M_impl._M_region_start);
       }
 
-      _M_allocator.construct(_M_begin + (_M_size), _v_);
-      _M_size++;
+      allocator_traits::construct(_M_impl._M_region_start + (size()), _v_);
+      _M_impl._M_region_end++;
     }
 
     /*
@@ -250,14 +294,15 @@ namespace mlib
     void push_back(reference &_v_)
     {
 
-      if (size() >= _M_capacity)
+      if (_M_impl._M_region_end == _M_impl._M_region_capacity)
       {
-        _M_capacity = (_M_capacity + 1) * _VECTOR_AMORT_GROWTH_FACTOR;
-        _M_begin = _M_allocator.reallocate(_M_begin, _M_capacity);
+        _M_impl._M_region_capacity = (_M_impl._M_region_capacity + 1) * _VECTOR_AMORT_GROWTH_FACTOR;
+        _M_impl._M_region_start = allocator_traits::reallocate(_M_impl._M_region_start, _M_impl._M_region_capacity - _M_impl._M_start);
       }
 
-      _M_allocator.construct(_M_begin + (_M_size), _v_);
-      _M_size++;
+      allocator_traits::construct(_M_impl._M_region_start + (size()), _v_);
+
+      _M_impl._M_region_end++;
     }
 
     void push_back(std::initializer_list<value_type> _args_)
@@ -274,16 +319,26 @@ namespace mlib
     clear()
     {
 
-      for (size_t i = 0; i < _M_size; i++)
+      for (size_t i = 0; i < size(); i++)
       {
-        _M_allocator.destroy(_M_begin + i);
+        allocator_traits::destroy(_M_impl._M_region_start + i);
       }
 
-      if (_M_begin)
+      if (_M_impl._M_region_start)
       {
-        _M_allocator.deallocate(_M_begin);
+        allocator_traits::deallocate(_M_impl._M_region_start);
       }
-      _M_size = 0;
+      _M_impl._M_region_end = _M_impl._M_region_start;
+    }
+
+    iterator mbegin() const
+    {
+      return iterator(_M_impl._M_region_start);
+    }
+
+    iterator mend() const
+    {
+      return iterator(_M_impl._M_region_end);
     }
 
     void insert(size_t index, const_reference value)
@@ -291,20 +346,25 @@ namespace mlib
 
       _resize_by_offset(1);
 
-      size_t shift_index = _M_size;
+      size_t shift_index = size();
 
       while (shift_index > index)
       {
 
         // [1, 4, ]
-        pointer temp = _M_begin + shift_index;
+        pointer temp = _M_impl._M_region_start + shift_index;
         *(temp) = *(temp - 1);
         shift_index--;
       }
 
-      *(_M_begin + index) = value;
-      _M_size++;
+      *(_M_impl._M_region_start + index) = value;
+      _M_impl._M_region_end++;
     };
+
+    base &_base()
+    {
+      return _M_base;
+    }
 
     void splice(size_t _start_, size_t _num_deletions_, std::initializer_list<value_type> _args_list_)
     {
@@ -318,7 +378,7 @@ namespace mlib
 
         for (size_t i = _start_; i < _start_ + args_size; i++)
         {
-          _M_begin[i] = _args_list_.begin()[list_cursor];
+          _M_impl._M_region_start[i] = _args_list_.begin()[list_cursor];
           list_cursor++;
         }
         //    1        3     c
@@ -328,11 +388,11 @@ namespace mlib
 
         for (size_t i = 0; i < lshift_iterations; i++)
         {
-          for (size_t j = _start_ + args_size; j < _M_size; j++)
+          for (size_t j = _start_ + args_size; j < this->size(); j++)
           {
-            _M_begin[j] = _M_begin[j + 1];
+            _M_impl._M_region_start[j] = _M_impl._M_region_start[j + 1];
           }
-          _M_size--;
+          _M_impl._M_region_end--;
         }
 
         // fill left to fill in deletions
@@ -344,7 +404,7 @@ namespace mlib
 
         for (i = _start_; i < _start_ + span; ++i)
         {
-          _M_begin[i] = _args_list_.begin()[list_cursor];
+          _M_impl._M_region_start[i] = _args_list_.begin()[list_cursor];
           list_cursor++;
         }
 
@@ -359,10 +419,12 @@ namespace mlib
         size_t list_cursor = 0;
         for (size_t i = _start_; i < _start_ + span; ++i)
         {
-          _M_begin[i] = _args_list_.begin()[list_cursor];
+          _M_impl._M_region_start[i] = _args_list_.begin()[list_cursor];
           list_cursor++;
         }
       }
+
+      _M_impl._M_region_end = _M_impl._M_region_end + size();
     }
 
     void reverse()
@@ -377,9 +439,9 @@ namespace mlib
       size_t j = this->size() - 1;
       for (size_t i = 0; i < j; i++)
       {
-        const value_type temp = _M_begin[i];
-        _M_begin[i] = _M_begin[j];
-        _M_begin[j] = temp;
+        const value_type temp = _M_impl._M_region_start[i];
+        _M_impl._M_region_start[i] = _M_impl._M_region_start[j];
+        _M_impl._M_region_start[j] = temp;
         j--;
       }
     };
@@ -405,9 +467,9 @@ namespace mlib
       size_t j = _end_;
       for (size_t i = _start_; i < j; i++)
       {
-        const value_type temp = _M_begin[i];
-        _M_begin[i] = _M_begin[j];
-        _M_begin[j] = temp;
+        const value_type temp = _M_impl._M_region_start[i];
+        _M_impl._M_region_start[i] = _M_impl._M_region_start[j];
+        _M_impl._M_region_start[j] = temp;
         j--;
       }
     };
@@ -422,9 +484,9 @@ namespace mlib
         __start__ = 0;
       }
 
-      if (__end__ >= _M_size)
+      if (__end__ >= size())
       {
-        __end__ = _M_size;
+        __end__ = size();
       }
 
       if (__start__ > __end__)
@@ -438,7 +500,9 @@ namespace mlib
       size_type index = 0;
       for (size_t i = __start__; i < __end__; i++)
       {
-        allocator_traits::construct(v._M_begin + index, *(_M_begin + i));
+
+        allocator_traits::construct(v._M_impl._M_region_start + index, *(this->_M_impl._M_region_start + i));
+        index++;
       }
 
       return v;
@@ -470,7 +534,7 @@ namespace mlib
     //   size_type index = 0;
     //   for (size_t i = __start__; i < __end__; i++)
     //   {
-    //     allocator_traits<value_type>::construct(v._M_begin + index, *(_M_begin + i));
+    //     allocator_traits<value_type>::construct(v._M_impl._M_region_start + index, *(_M_impl._M_region_start + i));
     //   }
 
     //   return v;
@@ -487,20 +551,21 @@ namespace mlib
       {
         return;
       }
-      _M_allocator.destroy(_M_begin + _M_size);
-      _M_size--;
+      allocator_traits::destroy(_M_impl._M_region_start + size());
+      _M_impl._M_region_end--;
     };
 
-    size_type size() const
+    difference_type size() const
     {
-      return _M_size;
+
+      return (_M_impl._M_region_end - _M_impl._M_region_start);
     }
 
     void print()
     {
       for (size_type i = 0; i < size(); i++)
       {
-        std::cout << *(_M_begin + i) << " , ";
+        std::cout << *(_M_impl._M_region_start + i) << " , ";
       }
     };
   };
