@@ -8,15 +8,10 @@
 int main()
 {
 
-  mlib::vec<int> v{1, 2, 3};
-  mlib::vec<int> v1 = v.slice(0, 2);
+  mlib::vec<int> v{0, 1, 2, 3, 4, 5};
 
-  for (auto i = v1.mbegin(); i != v1.mend(); ++i)
-  {
-    std::cout << *i << std::endl;
-  }
-
-  std::cout << "fixed";
+  v.splice(2, 2, {1, 2});
+  v.print();
 
   return 0;
 }
