@@ -158,7 +158,7 @@ namespace mlib
       _init_container();
     };
 
-    vec(size_t _n_)
+    vec(difference_type _n_)
     {
       _init_container(_n_);
     };
@@ -497,12 +497,10 @@ namespace mlib
 
       mlib::vec<value_type> v(__end__ - __start__);
 
-      size_type index = 0;
       for (size_t i = __start__; i < __end__; i++)
       {
-
-        allocator_traits::construct(v._M_impl._M_region_start + index, *(this->_M_impl._M_region_start + i));
-        index++;
+        allocator_traits::construct(v._M_impl._M_region_start + v.size(), *(this->_M_impl._M_region_start + i));
+        v._M_impl._M_region_end++;
       }
 
       return v;
