@@ -114,6 +114,8 @@ namespace mlib
     typedef std::size_t size_type;
     typedef mlib::normal_iterator<pointer> iterator;
     typedef mlib::normal_iterator<const_pointer> const_iterator;
+    typedef mlib::reverse_iterator<pointer> reverse_iterator;
+    typedef mlib::reverse_iterator<const_pointer> const_reverse_iterator;
 
   private:
     typename base::impl_data _M_impl; // retreive implementation iterators
@@ -419,6 +421,16 @@ namespace mlib
     iterator mbegin() const
     {
       return iterator(_M_impl._M_region_start);
+    }
+
+    reverse_iterator mrbegin() const
+    {
+      return reverse_iterator(_M_impl._M_region_end - 1);
+    }
+
+    reverse_iterator mrend() const
+    {
+      return reverse_iterator(_M_impl._M_region_start - 1);
     }
 
     iterator mend() const
