@@ -47,8 +47,13 @@ namespace mlib
 
         static pointer reallocate(pointer _old_, difference_type _n_)
         {
-            _old_ = (pointer)realloc(_old_, _n_ * sizeof(value_type));
-            return _old_;
+            pointer new_loc = (pointer)realloc(_old_, _n_ * sizeof(value_type));
+            if (!new_loc)
+            {
+                std::cout << "null";
+                return nullptr;
+            }
+            return new_loc;
         }
 
         template <class... _FwdArgs>

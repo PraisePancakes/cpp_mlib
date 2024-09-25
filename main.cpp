@@ -8,17 +8,19 @@
 
 int main()
 {
-  mlib::vec<int> v1{0, 1, 2, 3};
+  mlib::vec<int> v1{0, 1, 2, 3, 4, 5};
 
-  for (auto it = v1.mbegin(); it != v1.mend(); ++it)
-  {
-    std::cout << *it;
-  }
-  std::cout << std::endl;
-  for (auto it = v1.mrbegin(); it != v1.mrend(); ++it)
-  {
-    std::cout << *it;
-  }
+  v1.push_back(3);
+  v1.push_back(4);
+  v1.push_back(5);
+  v1.push_back(6);
+  v1.push_back(6);
+  v1.push_back(7);
+  v1.push_back(8);
+
+  std::cout << v1.capacity() << std::endl;
+
+  v1.print();
 
   return 0;
 }
