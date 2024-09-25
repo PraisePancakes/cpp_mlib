@@ -18,7 +18,7 @@ int main()
   v1.push_back(7);
   v1.push_back(8);
 
-  std::cout << v1.capacity() << std::endl;
+  std::cout << v1.size() << " : " << v1.capacity() << std::endl;
 
   v1.print();
 

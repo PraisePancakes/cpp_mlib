@@ -143,19 +143,19 @@ namespace mlib
     {
       difference_type current_size = size();
       difference_type new_capacity = current_size + _capacity_size_offset_;
-      pointer new_start = allocator_traits::allocate(new_capacity);
+      pointer new_start = allocator_traits::reallocate(_M_impl._M_region_start, new_capacity);
 
-      for (difference_type i = 0; i < current_size; ++i)
+      if (!new_start)
       {
-        allocator_traits::construct(new_start + i, std::move(*(_M_impl._M_region_start + i)));
-        allocator_traits::destroy(_M_impl._M_region_start + i); // Destroy the old element
+        throw std::bad_alloc();
       }
 
-      allocator_traits::deallocate(_M_impl._M_region_start);
-
-      _M_impl._M_region_start = new_start;
-      _M_impl._M_region_end = new_start + current_size;
-      _M_impl._M_region_capacity = new_start + new_capacity;
+      if (new_start != _M_impl._M_region_start)
+      {
+        _M_impl._M_region_start = new_start;
+        _M_impl._M_region_end = new_start + current_size;
+        _M_impl._M_region_capacity = new_start + new_capacity;
+      }
     }
 
     void _deep_copy(const vec &_other_)
@@ -354,7 +354,6 @@ namespace mlib
     {
       if (size() >= capacity())
       {
-        std::cout << "resized";
         _resize_by_offset(capacity());
       }
       allocator_traits::construct(_M_impl._M_region_start + size(), _v_);
