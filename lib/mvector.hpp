@@ -1,3 +1,10 @@
+/****************************************************/
+// Filename: mvector.hpp
+// Created: Arya Sharifai
+// Change history:
+// 9.25.2024 / Arya Sharifai
+/****************************************************/
+
 #pragma once
 #include <cmath>
 #include <functional>
@@ -7,17 +14,45 @@
 #include <cstddef>
 #include "mallocator.hpp"
 #include "miterator.hpp"
+#include <limits>
 
 #define _DEF_VECTOR_CAPACITY_ 1
 #define _VECTOR_AMORT_GROWTH_FACTOR 2
 
+/**
+ *  @module
+ *    this header implements a dynamic array structure, vector.
+ *  This vector supports any derived iterator (see miterator.hpp) as well as any explicitly allocator (see mallocator.hpp).
+ *  The purpose of avoiding a "baked-in" allocator/iterator was to enforce the SOC principle, this policy-like design allows for any derived iterator/allocator to
+ *  ensure extensibility, separation of algorithms is crucial to this library.
+ *
+ * @internal module note
+ *    To strictly follow a policy-like design, make use of allocator_traits and iterator_traits to enforce their respective algorithms / types respectively.
+ *
+ */
+
 namespace mlib
 {
+  /**
+   *  @class
+   *  vec_base<T, alloc>
+   *  this class is a trivial implementation helper that forwards the allocators underlying pointer and is restricted to derive a vector container.
+   *  @template
+   *  @param
+   *  _Ty
+   *  represents the underlying container's value_type, this is used to forward to an implicit allocator.
+   *  @param
+   *  _Alloc
+   *  this temp initializes a default allocator if no arguments were given.
+   *
+   */
 
   template <typename _Ty, class _Alloc = allocator<_Ty>>
   struct vec_base
   {
+    typedef _Alloc allocator_type;
     typedef typename allocator_traits<_Ty>::pointer pointer;
+    allocator_type _M_alloc;
 
     struct impl_data
     {
@@ -102,7 +137,7 @@ namespace mlib
   {
     typedef _Ty value_type;
     typedef vec_base<_Ty, _Alloc> base;
-    typedef _Alloc allocator_type;
+
     typedef allocator_traits<_Ty> allocator_traits;
 
   public:
@@ -121,15 +156,15 @@ namespace mlib
     typename base::impl_data _M_impl; // retreive implementation iterators
     base _M_base;
 
-    void _init_container(difference_type _n_ = 0)
+    void _init_container(size_type _n_ = 0)
     {
       if (_n_ == 0)
       {
         _n_ = _DEF_VECTOR_CAPACITY_;
       }
 
-      difference_type capacity = _n_ * _VECTOR_AMORT_GROWTH_FACTOR;
-      pointer start = allocator_traits::allocate(capacity);
+      size_type capacity = _n_ * _VECTOR_AMORT_GROWTH_FACTOR;
+      pointer start = _M_base._M_alloc.allocate(capacity);
       _M_impl._copy_data(start, start + capacity);
     }
 
@@ -139,11 +174,32 @@ namespace mlib
       this->_M_impl = _other_._M_impl;
     }
 
-    void _resize_by_offset(const difference_type _capacity_size_offset_)
+    void _resize_by_offset(const size_type _capacity_size_offset_)
     {
-      difference_type current_size = size();
-      difference_type new_capacity = current_size + _capacity_size_offset_;
-      pointer new_start = allocator_traits::reallocate(_M_impl._M_region_start, new_capacity);
+      size_type current_size = size();
+      size_type new_capacity = current_size + _capacity_size_offset_;
+      pointer new_start = _M_base._M_alloc.reallocate(_M_impl._M_region_start, new_capacity);
+
+      if (!new_start)
+      {
+        throw std::bad_alloc();
+      }
+
+      if (new_start != _M_impl._M_region_start)
+      {
+        _M_impl._M_region_start = new_start;
+        _M_impl._M_region_end = new_start + current_size;
+        _M_impl._M_region_capacity = new_start + new_capacity;
+      }
+    }
+
+    void _resize_by_amortization()
+    {
+      size_type current_size = size();
+      size_type current_capacity = capacity();
+      size_type new_capacity(current_capacity << 1);
+
+      pointer new_start = _M_base._M_alloc.reallocate(_M_impl._M_region_start, new_capacity);
 
       if (!new_start)
       {
@@ -161,10 +217,11 @@ namespace mlib
     void _deep_copy(const vec &_other_)
     {
       _init_container(_other_.size());
-      size_t safe_idx = 0;
+      size_type safe_idx = 0;
+
       for (size_type i = 0; i < size(); i++)
       {
-        allocator_traits::construct(_M_impl._M_region_start + i, _other_[safe_idx]);
+        _M_base._M_alloc.construct(_M_impl._M_region_start + i, _other_[safe_idx]);
       }
     }
 
@@ -174,7 +231,7 @@ namespace mlib
       _init_container();
     };
 
-    vec(difference_type _n_)
+    vec(size_type _n_)
     {
       _init_container(_n_);
     };
@@ -197,7 +254,7 @@ namespace mlib
 
       for (size_type i = 0; i < size(); i++)
       {
-        allocator_traits::construct(_M_impl._M_region_start + i, _v_);
+        _M_base._M_alloc.construct(_M_impl._M_region_start + i, _v_);
         _M_impl._M_region_end++;
       }
     }
@@ -217,15 +274,15 @@ namespace mlib
         v.insert(2, 5);
 
     */
-    void insert(difference_type _i_, const_reference _v_)
+    void insert(size_type _i_, const_reference _v_)
     {
       if (_i_ >= size())
       {
         push_back(_v_);
       }
 
-      difference_type si = _i_;
-      difference_type e = size();
+      size_type si = _i_;
+      size_type e = size();
 
       while (e > si)
       {
@@ -237,27 +294,27 @@ namespace mlib
       _M_impl._M_region_end++;
     };
 
-    void splice(difference_type _s_, difference_type _n_deletes_, std::initializer_list<value_type> _elems_)
+    void splice(size_type _s_, size_type _n_deletes_, std::initializer_list<value_type> _elems_)
     {
-      const difference_type start = _s_;
-      difference_type span = _n_deletes_;
+      const size_type start = _s_;
+      size_type span = _n_deletes_;
 
       if (span > _elems_.size())
       {
-        difference_type i = start;
-        for (difference_type index = 0; index < _elems_.size(); index++)
+        size_type i = start;
+        for (size_type index = 0; index < _elems_.size(); index++)
         {
           *(_M_impl._M_region_start + i) = _elems_.begin()[index];
           i++;
         }
 
-        difference_type _n_lshift = span - _elems_.size();
+        size_type _n_lshift = span - _elems_.size();
 
         i = start + _elems_.size();
 
-        for (difference_type iter = 0; iter < _n_lshift; iter++)
+        for (size_type iter = 0; iter < _n_lshift; iter++)
         {
-          for (size_t j = start + _elems_.size(); j < this->size(); j++)
+          for (size_type j = start + _elems_.size(); j < this->size(); j++)
           {
 
             _M_impl._M_region_start[j] = _M_impl._M_region_start[j + 1];
@@ -269,15 +326,15 @@ namespace mlib
       else if (span < _elems_.size())
       {
 
-        size_t list_cursor = 0;
-        size_t i = start;
+        size_type list_cursor = 0;
+        size_type i = start;
         for (; i < start + span; ++i)
         {
           _M_impl._M_region_start[i] = _elems_.begin()[list_cursor];
           list_cursor++;
         }
 
-        for (size_t j = i; j < start + _elems_.size(); j++)
+        for (size_type j = i; j < start + _elems_.size(); j++)
         {
 
           insert(j, _elems_.begin()[list_cursor++]);
@@ -301,7 +358,7 @@ namespace mlib
 
       for (auto it = _elems_.begin(); it != _elems_.end(); it++)
       {
-        allocator_traits::construct(_M_impl._M_region_start + size(), *it);
+        _M_base._M_alloc.construct(_M_impl._M_region_start + size(), *it);
 
         _M_impl._M_region_end++;
       }
@@ -317,7 +374,7 @@ namespace mlib
       _init_container(_alloc_, _n_);
     };
 
-    reference operator[](difference_type _ptr_index_) const
+    reference operator[](size_type _ptr_index_) const
     {
       return *(_M_impl._M_region_start + _ptr_index_);
     };
@@ -325,13 +382,11 @@ namespace mlib
     reference &at(size_type _ptr_index_) const
     {
       // bound check
-      if (_ptr_index_ < 0)
+      size_type max_value = std::numeric_limits<size_type>::max();
+
+      if (_ptr_index_ >= size() || _ptr_index_ == max_value)
       {
-        throw std::out_of_range("\nIndex succeeded left bound with underflowed range index, out of range");
-      }
-      if (_ptr_index_ >= size())
-      {
-        throw std::out_of_range("\nIndex succeeded right bound with overflowed range index, out of range ");
+        throw std::out_of_range("\nIndex succeeded bound with overflowed/underflowed range index, out of range ");
       }
 
       return *(_M_impl._M_region_start + _ptr_index_);
@@ -339,7 +394,7 @@ namespace mlib
 
     void for_each(std::function<void(reference)> _functor_) noexcept
     {
-      for (size_t i = 0; i < size(); i++)
+      for (size_type i = 0; i < size(); i++)
       {
         _functor_(*(_M_impl._M_region_start + i));
       }
@@ -354,9 +409,9 @@ namespace mlib
     {
       if (size() >= capacity())
       {
-        _resize_by_offset(capacity());
+        _resize_by_amortization();
       }
-      allocator_traits::construct(_M_impl._M_region_start + size(), _v_);
+      _M_base._M_alloc.construct(_M_impl._M_region_start + size(), _v_);
       _M_impl._M_region_end++;
     }
 
@@ -389,9 +444,9 @@ namespace mlib
     {
       if (size() >= capacity())
       {
-        _resize_by_offset(capacity());
+        _resize_by_amortization();
       }
-      allocator_traits::construct(_M_impl._M_region_start + size(), _v_);
+      _M_base._M_alloc.construct(_M_impl._M_region_start + size(), _v_);
       _M_impl._M_region_end++;
     }
 
@@ -409,14 +464,14 @@ namespace mlib
     clear()
     {
 
-      for (size_t i = 0; i < size(); i++)
+      for (size_type i = 0; i < size(); i++)
       {
-        allocator_traits::destroy(_M_impl._M_region_start + i);
+        _M_base._M_alloc.destroy(_M_impl._M_region_start + i);
       }
 
       if (_M_impl._M_region_start)
       {
-        allocator_traits::deallocate(_M_impl._M_region_start);
+        _M_base._M_alloc.deallocate(_M_impl._M_region_start);
       }
       _M_impl._M_region_end = _M_impl._M_region_start;
     }
@@ -441,6 +496,18 @@ namespace mlib
       return iterator(_M_impl._M_region_end);
     }
 
+    bool contains(value_type _v_)
+    {
+      for (size_type i = 0; i < size(); i++)
+      {
+        if (*(_M_impl._M_region_start + i) == _v_)
+        {
+          return true;
+        }
+      }
+      return false;
+    };
+
     base &_base()
     {
       return _M_base;
@@ -455,8 +522,8 @@ namespace mlib
       if (this->size() == 1)
         return;
 
-      size_t j = this->size() - 1;
-      for (size_t i = 0; i < j; i++)
+      size_type j = this->size() - 1;
+      for (size_type i = 0; i < j; i++)
       {
         const value_type temp = _M_impl._M_region_start[i];
         _M_impl._M_region_start[i] = _M_impl._M_region_start[j];
@@ -465,7 +532,7 @@ namespace mlib
       }
     };
 
-    void reverse(size_t _start_, size_t _end_)
+    void reverse(size_type _start_, size_type _end_)
     {
       // reverse from start to end.
       if (this->size() == 0)
@@ -474,8 +541,8 @@ namespace mlib
       if (this->size() == 1)
         return;
 
-      const size_t temp_start = _start_;
-      const size_t temp_end = _end_;
+      const size_type temp_start = _start_;
+      const size_type temp_end = _end_;
 
       if (_start_ > _end_)
       {
@@ -483,17 +550,16 @@ namespace mlib
         _end_ = temp_start;
       }
 
-      size_t j = _end_;
-      for (size_t i = _start_; i < j; i++)
+      size_type j = _end_;
+      for (size_type i = _start_; i < j; i++, j--)
       {
         const value_type temp = _M_impl._M_region_start[i];
         _M_impl._M_region_start[i] = _M_impl._M_region_start[j];
         _M_impl._M_region_start[j] = temp;
-        j--;
       }
     };
 
-    mlib::vec<value_type> slice(size_t __start__, size_t __end__)
+    mlib::vec<value_type> slice(size_type __start__, size_type __end__)
     {
       const int temp_start = __start__;
       const int temp_end = __end__;
@@ -516,48 +582,16 @@ namespace mlib
 
       mlib::vec<value_type> v(__end__ - __start__);
 
-      for (size_t i = __start__; i < __end__; i++)
+      for (size_type i = __start__; i < __end__; i++)
       {
-        allocator_traits::construct(v._M_impl._M_region_start + v.size(), *(this->_M_impl._M_region_start + i));
+        _M_base._M_alloc.construct(v._M_impl._M_region_start + v.size(), *(this->_M_impl._M_region_start + i));
         v._M_impl._M_region_end++;
       }
 
       return v;
     }
 
-    // mlib::vec<value_type> slice(size_t __start__, size_t __end__)
-    // {
-    //   const int temp_start = __start__;
-    //   const int temp_end = __end__;
-
-    //   if (__start__ < 0)
-    //   {
-    //     __start__ = 0;
-    //   }
-
-    //   if (__end__ >= _M_size)
-    //   {
-    //     __end__ = _M_size;
-    //   }
-
-    //   if (__start__ > __end__)
-    //   {
-    //     __end__ = temp_start;
-    //     __start__ = temp_end;
-    //   }
-
-    //   mlib::vec<value_type> v(__end__ - __start__);
-
-    //   size_type index = 0;
-    //   for (size_t i = __start__; i < __end__; i++)
-    //   {
-    //     allocator_traits<value_type>::construct(v._M_impl._M_region_start + index, *(_M_impl._M_region_start + i));
-    //   }
-
-    //   return v;
-    // }
-
-    difference_type capacity() const
+    inline size_type capacity() const
     {
       return (_M_impl._M_region_capacity - _M_impl._M_region_start);
     }
@@ -568,11 +602,11 @@ namespace mlib
       {
         return;
       }
-      allocator_traits::destroy(_M_impl._M_region_start + size());
+      _M_base._M_alloc.destroy(_M_impl._M_region_start + size());
       _M_impl._M_region_end--;
     };
 
-    difference_type size() const
+    inline size_type size() const
     {
       if (_M_impl._M_region_start == nullptr || _M_impl._M_region_end == nullptr)
         return 0;
