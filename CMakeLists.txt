@@ -20,6 +20,7 @@ add_library(${PROJECT_NAME} SHARED
     lib/mstack.hpp
     lib/mallocator.hpp
     lib/miterator.hpp
+    lib/mttraits.hpp
     lib/mstring.hpp)
 
 set_target_properties(
@@ -63,6 +64,7 @@ add_executable(${EXEC_NAME}
     lib/mstack.hpp
     lib/mallocator.hpp
     lib/miterator.hpp
+    lib/mttraits.hpp
     lib/mstring.hpp
 )
 
