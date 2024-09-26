@@ -1,4 +1,5 @@
 #pragma once
+#include <type_traits>
 
 namespace mlib
 {
@@ -9,12 +10,12 @@ namespace mlib
         using value_type = _Ty;
         using type = integral_constant;
 
-        constexpr operator() const noexcept
+        constexpr operator value_type() const noexcept
         {
             return value;
         };
 
-        [[nodiscard]] constexpr operator()() const noexcept
+        [[nodiscard]] constexpr value_type operator()() const noexcept
         {
             return value;
         }
@@ -44,7 +45,7 @@ namespace mlib
     template <class _Ty>
     struct add_volaitle_t
     {
-        using type = typedef add_volaitle<_Ty>::type;
+        using type = add_volatile<_Ty>::type;
     };
 
     template <class _Ty>
@@ -61,6 +62,23 @@ namespace mlib
 
     using true_type = bool_constant<true>;
     using false_type = bool_constant<false>;
+
+    namespace detail
+    {
+        template <class T>
+        integral_constant<bool, !std::is_union<T>::value> test(int T::*);
+
+        template <class T>
+        false_type test(...);
+    }
+
+    template <class _Ty>
+    struct is_class : decltype(detail::test<_Ty>(nullptr))
+    {
+    };
+
+    template <class _Ty>
+    constexpr bool is_class_v = is_class<_Ty>::value;
 
     template <class _Ty>
     struct is_ptr : false_type
