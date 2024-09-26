@@ -168,6 +168,16 @@ namespace mlib
       _M_impl._copy_data(start, start + capacity);
     }
 
+    void _reserve_space(size_type _n_ = 0)
+    {
+      if (_n_ == 0)
+      {
+        _n_ = _DEF_VECTOR_CAPACITY_;
+      }
+      pointer start = _M_base._M_alloc.allocate(_n_);
+      _M_impl._copy_data(start, start + _n_);
+    }
+
     void _init_container(const vec_base<value_type> &_other_)
     {
 
@@ -247,7 +257,17 @@ namespace mlib
       this->_M_impl = _other_._M_impl;
       this->_M_base = _other_._M_base;
     }
+    bool reserve(size_type _n_)
+    {
 
+      _reserve_space(_n_);
+      if (!this->_M_impl._M_region_start)
+      {
+        return false;
+      }
+
+      return true;
+    };
     explicit vec(size_type _n_, const value_type &_v_)
     {
       _init_container(_n_);
