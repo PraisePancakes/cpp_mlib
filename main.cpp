@@ -5,14 +5,13 @@
 #include <vector>
 #include <ctime>
 #include <chrono>
+#include <list>
+
+
 
 int main()
 {
-  mlib::vec<int> v1;
+  std::list<int> v{0, 1, 2, 3};
 
-  v1.reserve(10);
-  v1.push_back(10);
-  std::cout << v1.capacity() << " : " << v1.size() << std::endl;
-  v1.print();
   return 0;
 }

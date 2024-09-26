@@ -11,6 +11,11 @@ namespace mlib
     {
     };
 
+    template <typename I>
+    concept in_or_out_iterator = requires(I i) {
+        { *i };
+    };
+
     template <typename _Ty>
     struct iterator_traits
     {

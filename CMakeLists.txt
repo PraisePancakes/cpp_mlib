@@ -30,6 +30,9 @@ set_target_properties(
     PUBLIC_HEADER api/mlib.hpp
 )
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 
 target_include_directories(${PROJECT_NAME} PRIVATE .)
