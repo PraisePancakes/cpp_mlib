@@ -3,11 +3,28 @@
 
 namespace mlib
 {
-    struct random_access_tag
+
+    struct input_iterator_tag
     {
     };
 
-    struct bidirectional_tag
+    struct output_iterator_tag
+    {
+    };
+
+    struct forward_iterator_tag : public input_iterator_tag
+    {
+    };
+
+    struct bidirectional_tag : public forward_iterator_tag
+    {
+    };
+
+    struct random_access_iterator_tag
+    {
+    };
+
+    struct contiguous_iterator_tag : public random_access_iterator_tag
     {
     };
 
@@ -15,6 +32,8 @@ namespace mlib
     concept in_or_out_iterator = requires(I i) {
         { *i };
     };
+
+   
 
     template <typename _Ty>
     struct iterator_traits
@@ -47,7 +66,7 @@ namespace mlib
     };
 
     template <class _Ty>
-    struct normal_iterator : public iterator<random_access_tag, _Ty>
+    struct normal_iterator : public iterator<random_access_iterator_tag, _Ty>
     {
     protected:
         typedef iterator_traits<_Ty> _traits;
@@ -57,7 +76,7 @@ namespace mlib
         typedef typename _traits::pointer pointer;
         typedef value_type &reference;
         typedef typename _traits::difference_type difference_type;
-        typedef typename iterator<random_access_tag, _Ty>::category category;
+        typedef typename iterator<random_access_iterator_tag, _Ty>::category category;
 
         pointer _pit;
 
@@ -111,7 +130,7 @@ namespace mlib
         typedef typename _traits::pointer pointer;
         typedef value_type &reference;
         typedef typename _traits::difference_type difference_type;
-        typedef typename iterator<random_access_tag, _Ty>::category category;
+        typedef typename iterator<random_access_iterator_tag, _Ty>::category category;
 
     public:
         pointer _pit;
