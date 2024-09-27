@@ -79,11 +79,11 @@ namespace mlib
 
     namespace is_base_detail
     {
-        // check valid conversion
+        // template helper to check valid conversion
         template <typename _B>
         true_type test_ptr_conv(const volatile _B *);
 
-        // assert fallback conversion
+        // template helper to assert fallback conversion
         template <typename>
         false_type test_ptr_conv(const volatile void *);
 
