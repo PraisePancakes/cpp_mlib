@@ -17,6 +17,10 @@ union C
 {
 };
 
+struct D : public B
+{
+};
+
 int main()
 {
 
@@ -26,6 +30,14 @@ int main()
   std::cout << mlib::is_ptr<int *>::value;
   std::cout << mlib::is_ptr<int>::value;
 
-  // output 11010
+  typedef mlib::integral_constant<int, 5> iconst;
+  iconst c;
+
+  std::cout << c;
+  std::cout << c();
+  std::cout << iconst::value;
+  std::cout << mlib::is_base_of<B, D>::value;
+  std::cout << mlib::is_base_of<B, A>::value;
+  // output 1101055510
   return 0;
 }
