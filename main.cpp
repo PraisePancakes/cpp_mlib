@@ -20,14 +20,14 @@ union U
 int main()
 {
 
-  std::cout << mlib::is_enum<E>::value; // 1
-  std::cout << mlib::is_enum<A>::value; // 0
-  std::cout << mlib::is_union<U>::value;
-  std::cout << mlib::is_union<A>::value;
+  std::cout << mlib::is_enum<E>::value;         // 1
+  std::cout << mlib::is_enum<A>::value;         // 0
+  std::cout << mlib::is_union<U>::value;        // 1
+  std::cout << mlib::is_union<A>::value;        // 0
+  std::cout << mlib::is_function<int()>::value; // 1
+  std::cout << mlib::is_function<int>::value;   // 0
 
-  std::cout << mlib::is_function<int()>::value;
-  std::cout << mlib::is_function<int>::value;
-  // out 1010
+  // out 101010
 
   return 0;
 }
