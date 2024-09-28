@@ -165,4 +165,30 @@ namespace mlib
         typedef _Ty type;
     };
 
+    template <typename _Ty>
+    struct remove_q
+    {
+        typedef _Ty type;
+    };
+
+    template <typename _Ty>
+    struct remove_q<const _Ty>
+    {
+        typedef _Ty type;
+    };
+
+    template <typename _Ty>
+    struct remove_q<volatile _Ty>
+    {
+        typedef _Ty type;
+    };
+
+    template <typename _Ty>
+    struct remove_q<const volatile _Ty>
+    {
+        typedef _Ty type;    
+    };
+
+    
+
 }
