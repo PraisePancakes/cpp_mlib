@@ -8,6 +8,6 @@
 int main()
 {
 
-  std::cout << mlib::is_void<int>::value;
+  std::cout << mlib::is_void_v<void>;
   return 0;
 }

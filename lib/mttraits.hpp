@@ -126,5 +126,43 @@ namespace mlib
     {
     };
 
-    
+    template <typename _Ty>
+    constexpr bool is_void_v = is_void<_Ty>::value;
+
+    template <typename _Ty>
+    struct remove_const
+    {
+        typedef _Ty type;
+    };
+
+    template <typename _Ty>
+    struct remove_const<const _Ty>
+    {
+        typedef _Ty type;
+    };
+
+    template <typename _Ty>
+    struct remove_volatile
+    {
+        typedef _Ty type;
+    };
+
+    template <typename _Ty>
+    struct remove_volatile<volatile _Ty>
+    {
+        typedef _Ty type;
+    };
+
+    template <typename _Ty>
+    struct remove_cv
+    {
+        typedef _Ty type;
+    };
+
+    template <typename _Ty>
+    struct remove_cv<const volatile _Ty>
+    {
+        typedef _Ty type;
+    };
+
 }
