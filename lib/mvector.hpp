@@ -39,7 +39,7 @@ namespace mlib
    *  this class is a trivial implementation helper that forwards the allocators underlying pointer and is restricted to derive a vector container.
    *  @template
    *  @param
-   *  _Ty
+   *  T
    *  represents the underlying container's value_type, this is used to forward to an implicit allocator.
    *  @param
    *  _Alloc
@@ -47,11 +47,11 @@ namespace mlib
    *
    */
 
-  template <typename _Ty, class _Alloc = allocator<_Ty>>
+  template <typename T, class _Alloc = allocator<T>>
   struct vec_base
   {
     typedef _Alloc allocator_type;
-    typedef typename allocator_traits<_Ty>::pointer pointer;
+    typedef typename allocator_traits<T>::pointer pointer;
     allocator_type _M_alloc;
 
     struct impl_data
@@ -132,13 +132,13 @@ namespace mlib
     }
   };
 
-  template <typename _Ty, class _Alloc = allocator<_Ty>>
-  class vec : protected vec_base<_Ty, _Alloc>
+  template <typename T, class _Alloc = allocator<T>>
+  class vec : protected vec_base<T, _Alloc>
   {
-    typedef _Ty value_type;
-    typedef vec_base<_Ty, _Alloc> base;
+    typedef T value_type;
+    typedef vec_base<T, _Alloc> base;
 
-    typedef allocator_traits<_Ty> allocator_traits;
+    typedef allocator_traits<T> allocator_traits;
 
   public:
     typedef typename base::pointer pointer;

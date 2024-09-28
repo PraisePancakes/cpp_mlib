@@ -3,11 +3,11 @@
 
 namespace mlib
 {
-    template <typename _Ty, _Ty _v_>
+    template <typename T, T _v_>
     struct integral_constant
     {
-        static constexpr _Ty value = _v_;
-        using value_type = _Ty;
+        static constexpr T value = _v_;
+        using value_type = T;
         using type = integral_constant;
 
         constexpr operator value_type() const noexcept
@@ -22,58 +22,194 @@ namespace mlib
     };
 
     template <bool _V>
-    using bool_constant = integral_constant<bool, _V>;
+    using bool_const = integral_constant<bool, _V>;
 
-    template <typename _Ty>
+    using true_type = bool_const<true>;
+    using false_type = bool_const<false>;
+
+    template <typename T>
+    struct is_integral : false_type
+    {
+    };
+
+    template <>
+    struct is_integral<int> : true_type
+    {
+    };
+
+    template <>
+    struct is_integral<unsigned int> : true_type
+    {
+    };
+
+    template <>
+    struct is_integral<float> : true_type
+    {
+    };
+
+    template <>
+    struct is_integral<double> : true_type
+    {
+    };
+
+    template <>
+    struct is_integral<bool> : true_type
+    {
+    };
+
+    template <>
+    struct is_integral<char> : true_type
+    {
+    };
+
+    template <>
+    struct is_integral<unsigned char> : true_type
+    {
+    };
+
+    template <>
+    struct is_integral<signed char> : true_type
+    {
+    };
+
+    template <>
+    struct is_integral<wchar_t> : true_type
+    {
+    };
+
+    template <>
+    struct is_integral<char16_t> : true_type
+    {
+    };
+
+    template <>
+    struct is_integral<short int> : true_type
+    {
+    };
+
+    template <>
+    struct is_integral<unsigned short int> : true_type
+    {
+    };
+
+    template <>
+    struct is_integral<long int> : true_type
+    {
+    };
+
+    template <>
+    struct is_integral<unsigned long int> : true_type
+    {
+    };
+
+    template <>
+    struct is_integral<long long> : true_type
+    {
+    };
+    template <>
+    struct is_integral<unsigned long long> : true_type
+    {
+    };
+
+    template <typename T>
+    struct is_reference : false_type
+    {
+    };
+
+    template <typename T>
+    struct is_reference<T &> : true_type
+    {
+    };
+
+    template <typename T>
+    struct is_reference<T &&> : true_type
+    {
+    };
+
+    template <typename T>
+    struct is_const : false_type
+    {
+    };
+
+    template <typename T>
+    struct is_const<const T> : true_type
+    {
+    };
+
+    template <typename T>
+    struct is_function : bool_const<
+                             !is_const<const T>::value &&
+                             !is_reference<T>::value>
+    {
+    };
+
+    template <typename T, typename U>
+    struct is_same : false_type
+    {
+    };
+
+    template <typename T>
+    struct is_same<T, T> : true_type
+    {
+    };
+
+    template <typename T>
+    struct is_enum : bool_const<std::is_enum_v<T>>
+    {
+    };
+
+    template <typename T>
+    struct is_union : bool_const<std::is_union_v<T>>
+    {
+    };
+
+    template <typename T>
     struct add_const
     {
-        using type = const _Ty;
+        using type = const T;
     };
 
-    template <typename _Ty>
+    template <typename T>
     struct add_const_t
     {
-        using type = typename add_const<_Ty>::type;
+        using type = typename add_const<T>::type;
     };
 
-    template <typename _Ty>
+    template <typename T>
     struct add_volatile
     {
-        using type = volatile _Ty;
+        using type = volatile T;
     };
 
-    template <typename _Ty>
+    template <typename T>
     struct add_volaitle_t
     {
-        using type = add_volatile<_Ty>::type;
+        using type = add_volatile<T>::type;
     };
 
-    template <typename _Ty>
+    template <typename T>
     struct add_cv
     {
-        using type = const volatile _Ty;
+        using type = const volatile T;
     };
 
-    template <typename _Ty>
+    template <typename T>
     struct add_cv_t
     {
-        using type = add_cv<_Ty>::type;
+        using type = add_cv<T>::type;
     };
-
-    using true_type = bool_constant<true>;
-    using false_type = bool_constant<false>;
 
     namespace is_class_detail
     {
         template <typename T>
-        bool_constant<!std::is_union<T>::value> test(int T::*);
+        bool_const<!std::is_union<T>::value> test(int T::*);
 
         template <typename T>
         false_type test(...);
     }
 
-    template <typename _Ty>
-    struct is_class : decltype(is_class_detail::test<_Ty>(nullptr))
+    template <typename T>
+    struct is_class : decltype(is_class_detail::test<T>(nullptr))
     {
     };
 
@@ -97,26 +233,26 @@ namespace mlib
     };
 
     template <typename _B, typename _D>
-    struct is_base_of : bool_constant<
+    struct is_base_of : bool_const<
                             is_class<_B>::value &&
                             is_class<_D>::value &&decltype(is_base_detail::test_is_base_of<_B, _D>(0))::value>
     {
     };
 
-    template <typename _Ty>
-    constexpr bool is_class_v = is_class<_Ty>::value;
+    template <typename T>
+    constexpr bool is_class_v = is_class<T>::value;
 
-    template <typename _Ty>
+    template <typename T>
     struct is_ptr : false_type
     {
     };
 
-    template <typename _Ty>
-    struct is_ptr<_Ty *> : true_type
+    template <typename T>
+    struct is_ptr<T *> : true_type
     {
     };
 
-    template <typename _Ty>
+    template <typename T>
     struct is_void : false_type
     {
     };
@@ -126,69 +262,67 @@ namespace mlib
     {
     };
 
-    template <typename _Ty>
-    constexpr bool is_void_v = is_void<_Ty>::value;
+    template <typename T>
+    constexpr bool is_void_v = is_void<T>::value;
 
-    template <typename _Ty>
+    template <typename T>
     struct remove_const
     {
-        typedef _Ty type;
+        typedef T type;
     };
 
-    template <typename _Ty>
-    struct remove_const<const _Ty>
+    template <typename T>
+    struct remove_const<const T>
     {
-        typedef _Ty type;
+        typedef T type;
     };
 
-    template <typename _Ty>
+    template <typename T>
     struct remove_volatile
     {
-        typedef _Ty type;
+        typedef T type;
     };
 
-    template <typename _Ty>
-    struct remove_volatile<volatile _Ty>
+    template <typename T>
+    struct remove_volatile<volatile T>
     {
-        typedef _Ty type;
+        typedef T type;
     };
 
-    template <typename _Ty>
+    template <typename T>
     struct remove_cv
     {
-        typedef _Ty type;
+        typedef T type;
     };
 
-    template <typename _Ty>
-    struct remove_cv<const volatile _Ty>
+    template <typename T>
+    struct remove_cv<const volatile T>
     {
-        typedef _Ty type;
+        typedef T type;
     };
 
-    template <typename _Ty>
+    template <typename T>
     struct remove_q
     {
-        typedef _Ty type;
+        typedef T type;
     };
 
-    template <typename _Ty>
-    struct remove_q<const _Ty>
+    template <typename T>
+    struct remove_q<const T>
     {
-        typedef _Ty type;
+        typedef T type;
     };
 
-    template <typename _Ty>
-    struct remove_q<volatile _Ty>
+    template <typename T>
+    struct remove_q<volatile T>
     {
-        typedef _Ty type;
+        typedef T type;
     };
 
-    template <typename _Ty>
-    struct remove_q<const volatile _Ty>
+    template <typename T>
+    struct remove_q<const volatile T>
     {
-        typedef _Ty type;    
+        typedef T type;
     };
-
-    
 
 }
