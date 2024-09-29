@@ -163,6 +163,17 @@ namespace mlib
     {
     };
 
+    template <bool B, typename t = void>
+    struct enable_if
+    {
+    };
+
+    template <typename T>
+    struct enable_if<true, T>
+    {
+        typedef T type;
+    };
+
     template <typename T>
     struct add_const
     {

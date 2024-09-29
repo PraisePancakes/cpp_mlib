@@ -5,29 +5,21 @@
 #include <ctime>
 #include <chrono>
 
-enum E
+template <typename T>
+T sum(T a)
 {
+  return a;
 };
 
-class A
+template <typename T, typename = mlib::enable_if<std::is_integral<T>::value>::type, typename... Args>
+T sum(T a1, Args... a)
 {
-};
-
-union U
-{
+  return a1 + sum(a...);
 };
 
 int main()
 {
-
-  std::cout << mlib::is_enum<E>::value;         // 1
-  std::cout << mlib::is_enum<A>::value;         // 0
-  std::cout << mlib::is_union<U>::value;        // 1
-  std::cout << mlib::is_union<A>::value;        // 0
-  std::cout << mlib::is_function<int()>::value; // 1
-  std::cout << mlib::is_function<int>::value;   // 0
-
-  // out 101010
-
+  std::cout << sum("a", 2, 3);
+  std::cout << sum(1, 2, 3);
   return 0;
 }
