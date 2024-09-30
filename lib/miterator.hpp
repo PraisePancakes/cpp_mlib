@@ -66,11 +66,11 @@ namespace mlib
         typedef iterator_traits<T, random_access_iterator_tag> iter_traits;
 
     public:
-
         iter_traits::pointer _pit;
 
         normal_iterator() : _pit() {};
-        normal_iterator(iter_traits::pointer _loc_) : _pit(_loc_) {}
+        normal_iterator(iter_traits::pointer _loc_) : _pit(_loc_) {};
+        normal_iterator(iter_traits::const_reference _loc_) : _pit(_loc_) {};
 
         iter_traits::reference operator[](iter_traits::difference_type _i_) const noexcept
         {

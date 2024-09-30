@@ -28,6 +28,21 @@ namespace mlib
     using false_type = bool_const<false>;
 
     template <typename T>
+    struct is_ptr : false_type
+    {
+    };
+
+    template <typename T>
+    struct is_ptr<T *> : true_type
+    {
+    };
+
+    template <typename T>
+    struct is_enum : bool_const<std::is_enum_v<T>>
+    {
+    };
+
+    template <typename T>
     struct is_integral : false_type
     {
     };
@@ -112,6 +127,109 @@ namespace mlib
     };
 
     template <typename T>
+    struct is_floating_point : false_type
+    {
+    };
+
+    template <>
+    struct is_floating_point<float> : true_type
+    {
+    };
+
+    template <>
+    struct is_floating_point<double> : true_type
+    {
+    };
+
+    template <typename T>
+    struct remove_const
+    {
+        typedef T type;
+    };
+
+    template <typename T>
+    struct remove_const<const T>
+    {
+        typedef T type;
+    };
+
+    template <typename T>
+    struct remove_volatile
+    {
+        typedef T type;
+    };
+
+    template <typename T>
+    struct remove_volatile<volatile T>
+    {
+        typedef T type;
+    };
+
+    template <typename T>
+    struct remove_cv
+    {
+        typedef T type;
+    };
+
+    template <typename T>
+    struct remove_cv<const volatile T>
+    {
+        typedef T type;
+    };
+
+    template <typename T>
+    struct remove_q
+    {
+        typedef T type;
+    };
+
+    template <typename T>
+    struct remove_q<const T>
+    {
+        typedef T type;
+    };
+
+    template <typename T>
+    struct remove_q<volatile T>
+    {
+        typedef T type;
+    };
+
+    template <typename T>
+    struct remove_q<const volatile T>
+    {
+        typedef T type;
+    };
+
+    template <typename T>
+    struct is_arithmetic : bool_const<is_integral<T>::value || is_floating_point<T>::value>
+    {
+    };
+
+    template <typename T>
+    struct is_scalar : bool_const<is_arithmetic<T>::value || is_ptr<T>::value || is_enum<T>::value>
+    {
+    };
+
+    template <typename T>
+    struct is_member_ptr_helper : false_type
+    {
+    };
+
+    template <typename T, typename U>
+    struct is_member_ptr_helper<T U::*> : true_type
+    {
+    };
+
+    template <typename T>
+    struct is_member_ptr : is_member_ptr_helper<typename remove_cv<T>::type>
+    {
+    };
+
+    template <typename T>
+    concept integral = is_integral<T>::value;
+
+    template <typename T>
     struct is_reference : false_type
     {
     };
@@ -150,11 +268,6 @@ namespace mlib
 
     template <typename T>
     struct is_same<T, T> : true_type
-    {
-    };
-
-    template <typename T>
-    struct is_enum : bool_const<std::is_enum_v<T>>
     {
     };
 
@@ -250,20 +363,8 @@ namespace mlib
     {
     };
 
-
-
     template <typename T>
     constexpr bool is_class_v = is_class<T>::value;
-
-    template <typename T>
-    struct is_ptr : false_type
-    {
-    };
-
-    template <typename T>
-    struct is_ptr<T *> : true_type
-    {
-    };
 
     template <typename T>
     struct is_void : false_type
@@ -277,65 +378,5 @@ namespace mlib
 
     template <typename T>
     constexpr bool is_void_v = is_void<T>::value;
-
-    template <typename T>
-    struct remove_const
-    {
-        typedef T type;
-    };
-
-    template <typename T>
-    struct remove_const<const T>
-    {
-        typedef T type;
-    };
-
-    template <typename T>
-    struct remove_volatile
-    {
-        typedef T type;
-    };
-
-    template <typename T>
-    struct remove_volatile<volatile T>
-    {
-        typedef T type;
-    };
-
-    template <typename T>
-    struct remove_cv
-    {
-        typedef T type;
-    };
-
-    template <typename T>
-    struct remove_cv<const volatile T>
-    {
-        typedef T type;
-    };
-
-    template <typename T>
-    struct remove_q
-    {
-        typedef T type;
-    };
-
-    template <typename T>
-    struct remove_q<const T>
-    {
-        typedef T type;
-    };
-
-    template <typename T>
-    struct remove_q<volatile T>
-    {
-        typedef T type;
-    };
-
-    template <typename T>
-    struct remove_q<const volatile T>
-    {
-        typedef T type;
-    };
 
 }

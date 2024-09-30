@@ -146,10 +146,10 @@ namespace mlib
     typedef typename allocator_traits::reference reference;
     typedef ptrdiff_t difference_type;
     typedef size_t size_type;
-    typedef mlib::normal_iterator<value_type> iterator;
-    typedef mlib::normal_iterator<const value_type> const_iterator;
-    typedef mlib::reverse_iterator<value_type> reverse_iterator;
-    typedef mlib::reverse_iterator<const value_type> const_reverse_iterator;
+    typedef mlib::normal_iterator<pointer> iterator;
+    typedef mlib::normal_iterator<const pointer> const_iterator;
+    typedef mlib::reverse_iterator<pointer> reverse_iterator;
+    typedef mlib::reverse_iterator<const pointer> const_reverse_iterator;
 
   private:
     typename base::impl_data _M_impl; // retreive implementation iterators
