@@ -250,6 +250,8 @@ namespace mlib
     {
     };
 
+
+
     template <typename T>
     constexpr bool is_class_v = is_class<T>::value;
 

@@ -137,7 +137,6 @@ namespace mlib
   {
     typedef T value_type;
     typedef vec_base<T, _Alloc> base;
-
     typedef allocator_traits<T> allocator_traits;
 
   public:
@@ -145,12 +144,12 @@ namespace mlib
     typedef typename allocator_traits::const_pointer const_pointer;
     typedef typename allocator_traits::const_reference const_reference;
     typedef typename allocator_traits::reference reference;
-    typedef std::ptrdiff_t difference_type;
-    typedef std::size_t size_type;
-    typedef mlib::normal_iterator<pointer> iterator;
-    typedef mlib::normal_iterator<const_pointer> const_iterator;
-    typedef mlib::reverse_iterator<pointer> reverse_iterator;
-    typedef mlib::reverse_iterator<const_pointer> const_reverse_iterator;
+    typedef ptrdiff_t difference_type;
+    typedef size_t size_type;
+    typedef mlib::normal_iterator<value_type> iterator;
+    typedef mlib::normal_iterator<const value_type> const_iterator;
+    typedef mlib::reverse_iterator<value_type> reverse_iterator;
+    typedef mlib::reverse_iterator<const value_type> const_reverse_iterator;
 
   private:
     typename base::impl_data _M_impl; // retreive implementation iterators

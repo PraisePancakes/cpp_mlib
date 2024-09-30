@@ -33,44 +33,39 @@ namespace mlib
         { *i };
     };
 
-    template <typename T>
+    template <typename T, typename _Cat>
     struct iterator_traits
     {
+        typedef _Cat category;
         typedef T value_type;
         typedef value_type *pointer;
         typedef const value_type *const_pointer;
         typedef value_type &reference;
         typedef const value_type &const_reference;
+        typedef std::ptrdiff_t difference_type;
+        typedef size_t size_type;
     };
 
-    template <typename T>
-    struct iterator_traits<T *> // int* , char* etc..
+    template <typename T, typename _Cat>
+    struct iterator_traits<T *, _Cat> // int* , char* etc..
     {
+        typedef _Cat category;
         typedef T value_type;
         typedef value_type *pointer;
-        typedef const value_type *const_pointer;
-        typedef size_t difference_type;
-    };
-
-    template <class _ITCategory, class T, class _ITDistance = std::ptrdiff_t, class _ITPointer = T *, class _ITConstPointer = const T *>
-    struct iterator
-    {
-
-        typedef T value_type;
-        typedef _ITCategory category;
-        typedef _ITDistance difference_type;
-        typedef _ITPointer pointer;
-        typedef _ITConstPointer const_pointer;
+        typedef const pointer const_pointer;
+        typedef value_type &reference;
+        typedef const reference &const_reference;
+        typedef std::ptrdiff_t difference_type;
+        typedef size_t size_type;
     };
 
     template <class T>
-    struct normal_iterator : public iterator<random_access_iterator_tag, T>
+    struct normal_iterator
     {
     protected:
-        typedef iterator_traits<T> iter_traits;
+        typedef iterator_traits<T, random_access_iterator_tag> iter_traits;
 
     public:
-        typedef typename iterator<random_access_iterator_tag, T>::category category;
 
         iter_traits::pointer _pit;
 
@@ -115,13 +110,12 @@ namespace mlib
     };
 
     template <typename T>
-    class reverse_iterator : public iterator<bidirectional_tag, T>
+    class reverse_iterator
     {
-        typedef iterator_traits<T> iter_traits;
+        typedef iterator_traits<T, bidirectional_tag> iter_traits;
 
     protected:
         typedef typename iter_traits::difference_type difference_type;
-        typedef typename iterator<random_access_iterator_tag, T>::category category;
 
     public:
         iter_traits::pointer _pit;
