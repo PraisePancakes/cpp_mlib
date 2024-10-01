@@ -27,6 +27,9 @@ namespace mlib
     using true_type = bool_const<true>;
     using false_type = bool_const<false>;
 
+    template <class...>
+    using void_t = void;
+
     template <typename T>
     struct is_ptr : false_type
     {
@@ -261,6 +264,12 @@ namespace mlib
     {
     };
 
+    template <typename T>
+    struct is_iterator : bool_const<
+                             mlib::is_ptr<T>::value>
+    {
+    };
+
     template <typename T, typename U>
     struct is_same : false_type
     {
@@ -323,7 +332,7 @@ namespace mlib
         using type = add_cv<T>::type;
     };
 
-    namespace is_class_detail
+    namespace _is_class_detail
     {
         template <typename T>
         bool_const<!std::is_union<T>::value> test(int T::*);
@@ -333,11 +342,11 @@ namespace mlib
     }
 
     template <typename T>
-    struct is_class : decltype(is_class_detail::test<T>(nullptr))
+    struct is_class : decltype(_is_class_detail::test<T>(nullptr))
     {
     };
 
-    namespace is_base_detail
+    namespace _is_base_detail
     {
         // template helper to check valid conversion
         template <typename _B>
@@ -359,7 +368,7 @@ namespace mlib
     template <typename _B, typename _D>
     struct is_base_of : bool_const<
                             is_class<_B>::value &&
-                            is_class<_D>::value &&decltype(is_base_detail::test_is_base_of<_B, _D>(0))::value>
+                            is_class<_D>::value &&decltype(_is_base_detail::test_is_base_of<_B, _D>(0))::value>
     {
     };
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <cstddef>
+#include "mttraits.hpp"
 
 namespace mlib
 {
@@ -28,56 +29,88 @@ namespace mlib
     {
     };
 
+    namespace _same_as_detail
+    {
+        template <typename T, typename U>
+        concept _same_helper = std::is_same<T, U>::value;
+    };
+
+    template <typename T, typename U>
+    concept same_as = _same_as_detail::_same_helper<T, U> && _same_as_detail::_same_helper<U, T>;
+
+    template <typename Iterator, class = void>
+    struct init_iterator_traits
+    {
+    };
+
+    template <typename Iterator>
+    struct init_iterator_traits<Iterator,
+                                mlib::void_t<typename Iterator::iterator_category,
+                                             typename Iterator::value_type,
+                                             typename Iterator::difference_type,
+                                             typename Iterator::pointer,
+                                             typename Iterator::reference>>
+    {
+        typedef typename Iterator::iterator_category iterator_category;
+        typedef typename Iterator::value_type value_type;
+        typedef typename Iterator::difference_type difference_type;
+        typedef typename Iterator::pointer pointer;
+        typedef typename Iterator::reference reference;
+    };
+
+    template <typename Iter>
+    struct iterator_traits : init_iterator_traits<Iter>
+    {
+    };
+
+    template <typename T>
+    struct iterator_traits<T *> // int* , char* etc..
+    {
+        typedef random_access_iterator_tag iterator_category;
+        typedef T value_type;
+        typedef T *pointer;
+        typedef T &reference;
+        typedef std::ptrdiff_t difference_type;
+        typedef size_t size_type;
+    };
+
+    template <typename T>
+    struct iterator_traits<const T *> // int* , char* etc..
+    {
+        typedef random_access_iterator_tag iterator_category;
+        typedef T value_type;
+        typedef const T *pointer;
+        typedef const T &reference;
+        typedef std::ptrdiff_t difference_type;
+        typedef size_t size_type;
+    };
+
     template <typename I>
-    concept in_or_out_iterator = requires(I i) {
-        { *i };
+    concept Iterator = requires(I i) {
+        { *i } -> mlib::same_as<typename mlib::iterator_traits<I>::reference>;
+        { ++i } -> mlib::same_as<I &>;
+        { i++ } -> mlib::same_as<I>;
     };
 
-    template <typename T, typename _Cat>
-    struct iterator_traits
-    {
-        typedef _Cat category;
-        typedef T value_type;
-        typedef value_type *pointer;
-        typedef const value_type *const_pointer;
-        typedef value_type &reference;
-        typedef const value_type &const_reference;
-        typedef std::ptrdiff_t difference_type;
-        typedef size_t size_type;
-    };
-
-    template <typename T, typename _Cat>
-    struct iterator_traits<T *, _Cat> // int* , char* etc..
-    {
-        typedef _Cat category;
-        typedef T value_type;
-        typedef value_type *pointer;
-        typedef const pointer const_pointer;
-        typedef value_type &reference;
-        typedef const reference &const_reference;
-        typedef std::ptrdiff_t difference_type;
-        typedef size_t size_type;
-    };
-
-    template <class T>
+    template <class Iterator>
     struct normal_iterator
     {
     protected:
-        typedef iterator_traits<T, random_access_iterator_tag> iter_traits;
-
     public:
+        typedef iterator_traits<Iterator> iter_traits;
+        typedef random_access_iterator_tag iterator_category;
         iter_traits::pointer _pit;
 
         normal_iterator() : _pit() {};
         normal_iterator(iter_traits::pointer _loc_) : _pit(_loc_) {};
-        normal_iterator(iter_traits::const_reference _loc_) : _pit(_loc_) {};
+        normal_iterator(iter_traits::reference _loc_) : _pit(_loc_) {};
 
         iter_traits::reference operator[](iter_traits::difference_type _i_) const noexcept
         {
             return *(_pit + _i_);
         }
 
-        normal_iterator &operator=(const normal_iterator<T> &_other_)
+        normal_iterator &operator=(const normal_iterator<Iterator> &_other_)
         {
             this->_pit = _other_._pit;
         };
@@ -112,14 +145,12 @@ namespace mlib
     template <typename T>
     class reverse_iterator
     {
-        typedef iterator_traits<T, bidirectional_tag> iter_traits;
-
-    protected:
-        typedef typename iter_traits::difference_type difference_type;
 
     public:
+        typedef iterator_traits<T> iter_traits;
         iter_traits::pointer _pit;
 
+        typedef typename iter_traits::difference_type difference_type;
         reverse_iterator() : _pit() {};
         reverse_iterator(iter_traits::pointer _loc_) : _pit(_loc_) {};
 
