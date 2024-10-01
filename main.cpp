@@ -18,7 +18,6 @@ using mem_fun_ptr_t = int (S::*)();
 
 static_assert(mlib::is_member_ptr<mem_int_ptr_t>::value);
 static_assert(mlib::is_member_ptr<mem_fun_ptr_t>::value);
-static_assert(mlib::is_iterator<int *>::value);
 
 int main()
 {

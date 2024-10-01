@@ -1,5 +1,6 @@
 #pragma once
 #include <type_traits>
+#include "miterator.hpp"
 
 namespace mlib
 {
@@ -264,10 +265,20 @@ namespace mlib
     {
     };
 
-    template <typename T>
-    struct is_iterator : bool_const<
-                             mlib::is_ptr<T>::value>
+    namespace _same_as_detail
     {
+        template <typename T, typename U>
+        concept _same_helper = std::is_same<T, U>::value;
+    };
+
+    template <typename T, typename U>
+    concept same_as = _same_as_detail::_same_helper<T, U> && _same_as_detail::_same_helper<U, T>;
+
+    template <typename I>
+    concept Iterator = requires(I i) {
+        { *i } -> mlib::same_as<I &>;
+        { ++i } -> mlib::same_as<I &>;
+        { i++ } -> mlib::same_as<I>;
     };
 
     template <typename T, typename U>

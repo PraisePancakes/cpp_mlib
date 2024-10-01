@@ -29,15 +29,6 @@ namespace mlib
     {
     };
 
-    namespace _same_as_detail
-    {
-        template <typename T, typename U>
-        concept _same_helper = std::is_same<T, U>::value;
-    };
-
-    template <typename T, typename U>
-    concept same_as = _same_as_detail::_same_helper<T, U> && _same_as_detail::_same_helper<U, T>;
-
     template <typename Iterator, class = void>
     struct init_iterator_traits
     {
@@ -83,13 +74,6 @@ namespace mlib
         typedef const T &reference;
         typedef std::ptrdiff_t difference_type;
         typedef size_t size_type;
-    };
-
-    template <typename I>
-    concept Iterator = requires(I i) {
-        { *i } -> mlib::same_as<typename mlib::iterator_traits<I>::reference>;
-        { ++i } -> mlib::same_as<I &>;
-        { i++ } -> mlib::same_as<I>;
     };
 
     template <class Iterator>
