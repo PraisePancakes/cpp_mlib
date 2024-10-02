@@ -17,7 +17,7 @@
 #include <limits>
 
 #define _DEF_VECTOR_CAPACITY_ 1
-#define _VECTOR_AMORT_GROWTH_FACTOR 2
+#define _AMORT_FAC 2
 
 /**
  *  @module
@@ -162,7 +162,7 @@ namespace mlib
         _n_ = _DEF_VECTOR_CAPACITY_;
       }
 
-      size_type capacity = _n_ * _VECTOR_AMORT_GROWTH_FACTOR;
+      size_type capacity = _n_ * _AMORT_FAC;
       pointer start = _M_base._M_alloc.allocate(capacity);
       _M_impl._copy_data(start, start + capacity);
     }
