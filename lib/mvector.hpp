@@ -50,97 +50,104 @@ namespace mlib
   template <typename T, class _Alloc = allocator<T>>
   struct vec_base
   {
+  protected:
     typedef _Alloc allocator_type;
     typedef typename allocator_traits<T>::pointer pointer;
     allocator_type _M_alloc;
+    pointer _M_region_start;
+    pointer _M_region_end;
+    pointer _M_region_capacity;
 
-    struct impl_data
+    vec_base() : _M_alloc(nullptr), _M_region_start(nullptr), _M_region_end(nullptr), _M_region_capacity(nullptr) {};
+
+    vec_base(size_t _capacity_)
     {
-      pointer _M_region_start;
-      pointer _M_region_end;
-      pointer _M_region_capacity;
-
-      impl_data() : _M_region_capacity(nullptr), _M_region_end(nullptr), _M_region_start(nullptr) {};
-      impl_data(pointer _s_, pointer _e_, pointer _c_) : _M_region_start(_s_), _M_region_capacity(_c_), _M_region_end(_e_) {};
-      impl_data(impl_data &&_other_) : _M_region_start(_other_._M_region_start),
-                                       _M_region_end(_other_._M_region_end),
-                                       _M_region_capacity(_other_._M_region_capacity)
-      {
-        _other_._M_region_capacity = _other_._M_region_start = _other_._M_region_end = pointer();
-      }
-
-      impl_data(const impl_data &_other_)
-      {
-        _M_region_capacity = _other_._M_region_capacity;
-        _M_region_end = _other_._M_region_end;
-        _M_region_start = _other_._M_region_start;
-      }
-
-      impl_data &operator=(const impl_data &_other_)
-      {
-        _M_region_capacity = _other_._M_region_capacity;
-        _M_region_end = _other_._M_region_end;
-        _M_region_start = _other_._M_region_start;
-        return *this;
-      }
-
-      void _copy_data(const impl_data &_other_)
-      {
-        _M_region_capacity = _other_._M_region_capacity;
-        _M_region_end = _other_._M_region_end;
-        _M_region_start = _other_._M_region_start;
-      };
-
-      void _copy_data(pointer _s_, pointer _c_)
-      {
-        if (_s_ == nullptr)
-        {
-          std::cout << "null";
-        }
-
-        if (_c_ == nullptr)
-        {
-          std::cout << "null";
-        }
-
-        _M_region_start = _s_;
-        _M_region_end = _s_;
-        _M_region_capacity = _c_;
-      };
-
-      ~impl_data()
-      {
-        _M_region_start = nullptr;
-        _M_region_capacity = nullptr;
-        _M_region_end = nullptr;
-      };
-    };
-
-    impl_data _M_impl;
-
-    vec_base() {}
-
-    vec_base(const vec_base &_other_)
-    {
-      this->_M_impl = _other_._M_impl;
-    };
-
-    vec_base &operator=(const vec_base &_other_)
-    {
-      this->_M_impl._copy_data(_other_._M_impl);
-      return *this;
+      _M_region_start = _M_alloc.allocate(_capacity_);
+      _M_region_end = _M_region_start;
+      _M_region_capacity = _M_region_start + _capacity_;
     }
+
+    vec_base(_Alloc _allocator_, size_t _capacity_)
+    {
+      this->_M_alloc = _allocator_;
+      _M_region_start = _M_alloc;
+      _M_region_end = _M_region_start;
+      _M_region_capacity = _M_region_start + _capacity_;
+    };
+    void _reserve(size_t _capacity_)
+    {
+      _M_region_start = _M_alloc.allocate(_capacity_);
+      if (!_M_region_start)
+      {
+        return;
+      }
+      _M_region_end = _M_region_start;
+      _M_region_capacity = _M_region_start + _capacity_;
+    };
+
+    void _resize_by_offset(const size_t _capacity_size_offset_)
+    {
+      size_t current_size = _size();
+      size_t new_capacity = current_size + _capacity_size_offset_;
+      pointer new_start = this->_M_alloc.reallocate(this->_M_region_start, new_capacity);
+
+      if (!new_start)
+      {
+        throw std::bad_alloc();
+      }
+
+      if (new_start != this->_M_region_start)
+      {
+        this->_M_region_start = new_start;
+        this->_M_region_end = new_start + current_size;
+        this->_M_region_capacity = new_start + new_capacity;
+      }
+    }
+
+    void _resize_by_amortization()
+    {
+      size_t current_size = _size();
+      size_t current_capacity = _capacity();
+      size_t new_capacity((current_capacity + 1) << 1);
+
+      pointer new_start = this->_M_alloc.reallocate(this->_M_region_start, new_capacity);
+
+      if (!new_start)
+      {
+        throw std::bad_alloc();
+      }
+
+      if (new_start != this->_M_region_start)
+      {
+        this->_M_region_start = new_start;
+        this->_M_region_end = new_start + current_size;
+        this->_M_region_capacity = new_start + new_capacity;
+      }
+    }
+
+    size_t _size() const
+    {
+      return _M_region_end - _M_region_start;
+    };
+
+    size_t _capacity() const
+    {
+      return _M_region_capacity - _M_region_start;
+    }
+
+    vec_base(const vec_base &_other_) {
+
+    };
   };
 
   template <typename T, class _Alloc = allocator<T>>
   class vec : protected vec_base<T, _Alloc>
   {
     typedef T value_type;
-    typedef vec_base<T, _Alloc> base;
     typedef allocator_traits<T> allocator_traits;
 
   public:
-    typedef typename base::pointer pointer;
+    typedef typename allocator_traits::pointer pointer;
     typedef typename allocator_traits::const_pointer const_pointer;
     typedef typename allocator_traits::const_reference const_reference;
     typedef typename allocator_traits::reference reference;
@@ -152,129 +159,33 @@ namespace mlib
     typedef mlib::reverse_iterator<const pointer> const_reverse_iterator;
 
   private:
-    typename base::impl_data _M_impl; // retreive implementation iterators
-    base _M_base;
-
-    void _init_container(size_type _n_ = 0)
-    {
-      if (_n_ == 0)
-      {
-        _n_ = _DEF_VECTOR_CAPACITY_;
-      }
-
-      size_type capacity = _n_ * _AMORT_FAC;
-      pointer start = _M_base._M_alloc.allocate(capacity);
-      _M_impl._copy_data(start, start + capacity);
-    }
-
-    void _reserve_space(size_type _n_ = 0)
-    {
-      if (_n_ == 0)
-      {
-        _n_ = _DEF_VECTOR_CAPACITY_;
-      }
-      pointer start = _M_base._M_alloc.allocate(_n_);
-      _M_impl._copy_data(start, start + _n_);
-    }
-
-    void _init_container(const vec_base<value_type> &_other_)
-    {
-
-      this->_M_impl = _other_._M_impl;
-    }
-
-    void _resize_by_offset(const size_type _capacity_size_offset_)
-    {
-      size_type current_size = size();
-      size_type new_capacity = current_size + _capacity_size_offset_;
-      pointer new_start = _M_base._M_alloc.reallocate(_M_impl._M_region_start, new_capacity);
-
-      if (!new_start)
-      {
-        throw std::bad_alloc();
-      }
-
-      if (new_start != _M_impl._M_region_start)
-      {
-        _M_impl._M_region_start = new_start;
-        _M_impl._M_region_end = new_start + current_size;
-        _M_impl._M_region_capacity = new_start + new_capacity;
-      }
-    }
-
-    void _resize_by_amortization()
-    {
-      size_type current_size = size();
-      size_type current_capacity = capacity();
-      size_type new_capacity(current_capacity << 1);
-
-      pointer new_start = _M_base._M_alloc.reallocate(_M_impl._M_region_start, new_capacity);
-
-      if (!new_start)
-      {
-        throw std::bad_alloc();
-      }
-
-      if (new_start != _M_impl._M_region_start)
-      {
-        _M_impl._M_region_start = new_start;
-        _M_impl._M_region_end = new_start + current_size;
-        _M_impl._M_region_capacity = new_start + new_capacity;
-      }
-    }
-
-    void _deep_copy(const vec &_other_)
-    {
-      _init_container(_other_.size());
-      size_type safe_idx = 0;
-
-      for (size_type i = 0; i < size(); i++)
-      {
-        _M_base._M_alloc.construct(_M_impl._M_region_start + i, _other_[safe_idx]);
-      }
-    }
-
   public:
-    vec()
-    {
-      _init_container();
-    };
+    vec() : vec_base<T, _Alloc>(0) {
 
-    vec(size_type _n_)
-    {
-      _init_container(_n_);
-    };
+            };
+    vec(size_type _n_) : vec_base<T, _Alloc>(_n_) {
 
-    vec(const vec_base<value_type> _other_)
+                         };
+    vec(const vec_base<value_type> _other_) : vec_base<T, _Alloc>(_other_.size())
     {
-      this->_init_container(_other_);
-      this->_M_base = _other_;
+    }
+    vec(const vec<value_type> &_other_) : vec_base<T, _Alloc>(_other_.size())
+    {
     }
 
-    vec(const vec<value_type> &_other_)
-    {
-      this->_M_impl = _other_._M_impl;
-      this->_M_base = _other_._M_base;
-    }
     bool reserve(size_type _n_)
     {
-
-      _reserve_space(_n_);
-      if (!this->_M_impl._M_region_start)
-      {
-        return false;
-      }
-
-      return true;
+      this->_reserve(_n_);
+      return this->_M_region_start;
     };
-    explicit vec(size_type _n_, const value_type &_v_)
-    {
-      _init_container(_n_);
 
-      for (size_type i = 0; i < size(); i++)
+    explicit vec(size_type _n_, const value_type &_v_) : vec_base<T, _Alloc>(_n_)
+    {
+
+      for (size_type i = 0; i < _n_; i++)
       {
-        _M_base._M_alloc.construct(_M_impl._M_region_start + i, _v_);
-        _M_impl._M_region_end++;
+
+        push_back(_v_);
       }
     }
 
@@ -305,12 +216,12 @@ namespace mlib
 
       while (e > si)
       {
-        *(_M_impl._M_region_start + e) = *(_M_impl._M_region_start + (e - 1));
+        *(this->_M_region_start + e) = *(this->_M_region_start + (e - 1));
         e--;
       }
 
-      *(_M_impl._M_region_start + e) = _v_;
-      _M_impl._M_region_end++;
+      *(this->_M_region_start + e) = _v_;
+      this->_M_region_end++;
     };
 
     void splice(size_type _s_, size_type _n_deletes_, std::initializer_list<value_type> _elems_)
@@ -323,7 +234,7 @@ namespace mlib
         size_type i = start;
         for (size_type index = 0; index < _elems_.size(); index++)
         {
-          *(_M_impl._M_region_start + i) = _elems_.begin()[index];
+          *(this->_M_region_start + i) = _elems_.begin()[index];
           i++;
         }
 
@@ -336,10 +247,10 @@ namespace mlib
           for (size_type j = start + _elems_.size(); j < this->size(); j++)
           {
 
-            _M_impl._M_region_start[j] = _M_impl._M_region_start[j + 1];
+            this->_M_region_start[j] = this->_M_region_start[j + 1];
           }
 
-          _M_impl._M_region_end--;
+          this->_M_region_end--;
         }
       }
       else if (span < _elems_.size())
@@ -349,7 +260,7 @@ namespace mlib
         size_type i = start;
         for (; i < start + span; ++i)
         {
-          _M_impl._M_region_start[i] = _elems_.begin()[list_cursor];
+          this->_M_region_start[i] = _elems_.begin()[list_cursor];
           list_cursor++;
         }
 
@@ -364,38 +275,30 @@ namespace mlib
         size_type list_cursor = 0;
         for (size_type i = start; i < start + span; ++i)
         {
-          _M_impl._M_region_start[i] = _elems_.begin()[list_cursor];
+          this->_M_region_start[i] = _elems_.begin()[list_cursor];
           list_cursor++;
         }
       }
     };
 
-    vec(std::initializer_list<value_type> _elems_)
+    vec(std::initializer_list<value_type> _elems_) : vec_base<T, _Alloc>(_elems_.size())
     {
-
-      _init_container(_elems_.size());
 
       for (auto it = _elems_.begin(); it != _elems_.end(); it++)
       {
-        _M_base._M_alloc.construct(_M_impl._M_region_start + size(), *it);
+        this->_M_alloc.construct(this->_M_region_start + size(), *it);
 
-        _M_impl._M_region_end++;
+        this->_M_region_end++;
       }
     };
 
-    explicit vec(const allocator<value_type> &_alloc_)
-    {
-      _init_container(_alloc_);
-    };
+    explicit vec(const allocator<value_type> &_alloc_, size_type _n_) : vec_base<T, _Alloc>(_alloc_, _n_) {
 
-    explicit vec(const allocator<value_type> &_alloc_, size_type _n_)
-    {
-      _init_container(_alloc_, _n_);
-    };
+                                                                        };
 
     reference operator[](size_type _ptr_index_) const
     {
-      return *(_M_impl._M_region_start + _ptr_index_);
+      return *(this->_M_region_start + _ptr_index_);
     };
 
     reference &at(size_type _ptr_index_) const
@@ -408,14 +311,14 @@ namespace mlib
         throw std::out_of_range("\nIndex succeeded bound with overflowed/underflowed range index, out of range ");
       }
 
-      return *(_M_impl._M_region_start + _ptr_index_);
+      return *(this->_M_region_start + _ptr_index_);
     };
 
     void for_each(std::function<void(reference)> _functor_) noexcept
     {
       for (size_type i = 0; i < size(); i++)
       {
-        _functor_(*(_M_impl._M_region_start + i));
+        _functor_(*(this->_M_region_start + i));
       }
     };
 
@@ -428,10 +331,11 @@ namespace mlib
     {
       if (size() >= capacity())
       {
-        _resize_by_amortization();
+        this->_resize_by_amortization();
       }
-      _M_base._M_alloc.construct(_M_impl._M_region_start + size(), _v_);
-      _M_impl._M_region_end++;
+
+      this->_M_alloc.construct(this->_M_region_start + size(), _v_);
+      this->_M_region_end++;
     }
 
     /*
@@ -463,10 +367,11 @@ namespace mlib
     {
       if (size() >= capacity())
       {
-        _resize_by_amortization();
+        this->_resize_by_amortization();
       }
-      _M_base._M_alloc.construct(_M_impl._M_region_start + size(), _v_);
-      _M_impl._M_region_end++;
+
+      this->_M_alloc.construct(this->_M_region_start + size(), _v_);
+      this->_M_region_end++;
     }
 
     void push_back(std::initializer_list<value_type> _args_)
@@ -474,7 +379,6 @@ namespace mlib
 
       for (auto it = _args_.begin(); it != _args_.end(); ++it)
       {
-
         push_back(*it);
       }
     }
@@ -485,41 +389,41 @@ namespace mlib
 
       for (size_type i = 0; i < size(); i++)
       {
-        _M_base._M_alloc.destroy(_M_impl._M_region_start + i);
+        this->_M_alloc.destroy(this->_M_region_start + i);
       }
 
-      if (_M_impl._M_region_start)
+      if (this->_M_region_start)
       {
-        _M_base._M_alloc.deallocate(_M_impl._M_region_start);
+        this->_M_alloc.deallocate(this->_M_region_start);
       }
-      _M_impl._M_region_end = _M_impl._M_region_start;
+      this->_M_region_end = this->_M_region_start;
     }
 
     iterator mbegin() const
     {
-      return iterator(_M_impl._M_region_start);
+      return iterator(this->_M_region_start);
     }
 
     reverse_iterator mrbegin() const
     {
-      return reverse_iterator(_M_impl._M_region_end - 1);
+      return reverse_iterator(this->_M_region_end - 1);
     }
 
     reverse_iterator mrend() const
     {
-      return reverse_iterator(_M_impl._M_region_start - 1);
+      return reverse_iterator(this->_M_region_start - 1);
     }
 
     iterator mend() const
     {
-      return iterator(_M_impl._M_region_end);
+      return iterator(this->_M_region_end);
     }
 
     bool contains(value_type _v_)
     {
       for (size_type i = 0; i < size(); i++)
       {
-        if (*(_M_impl._M_region_start + i) == _v_)
+        if (*(this->_M_region_start + i) == _v_)
         {
           return true;
         }
@@ -527,10 +431,6 @@ namespace mlib
       return false;
     };
 
-    base &_base()
-    {
-      return _M_base;
-    }
     // splice , insert
     void reverse()
     {
@@ -544,9 +444,9 @@ namespace mlib
       size_type j = this->size() - 1;
       for (size_type i = 0; i < j; i++)
       {
-        const value_type temp = _M_impl._M_region_start[i];
-        _M_impl._M_region_start[i] = _M_impl._M_region_start[j];
-        _M_impl._M_region_start[j] = temp;
+        const value_type temp = this->_M_region_start[i];
+        this->_M_region_start[i] = this->_M_region_start[j];
+        this->_M_region_start[j] = temp;
         j--;
       }
     };
@@ -572,9 +472,9 @@ namespace mlib
       size_type j = _end_;
       for (size_type i = _start_; i < j; i++, j--)
       {
-        const value_type temp = _M_impl._M_region_start[i];
-        _M_impl._M_region_start[i] = _M_impl._M_region_start[j];
-        _M_impl._M_region_start[j] = temp;
+        const value_type temp = this->_M_region_start[i];
+        this->_M_region_start[i] = this->_M_region_start[j];
+        this->_M_region_start[j] = temp;
       }
     };
 
@@ -603,8 +503,8 @@ namespace mlib
 
       for (size_type i = __start__; i < __end__; i++)
       {
-        _M_base._M_alloc.construct(v._M_impl._M_region_start + v.size(), *(this->_M_impl._M_region_start + i));
-        v._M_impl._M_region_end++;
+        this->_M_alloc.construct(v._M_region_start + v.size(), *(this->_M_region_start + i));
+        v._M_region_end++;
       }
 
       return v;
@@ -612,7 +512,7 @@ namespace mlib
 
     inline size_type capacity() const
     {
-      return (_M_impl._M_region_capacity - _M_impl._M_region_start);
+      return this->_capacity();
     }
 
     void pop_back() noexcept
@@ -621,23 +521,20 @@ namespace mlib
       {
         return;
       }
-      _M_base._M_alloc.destroy(_M_impl._M_region_start + size());
-      _M_impl._M_region_end--;
+      this->_M_alloc.destroy(this->_M_region_start + size());
+      this->_M_region_end--;
     };
 
     inline size_type size() const
     {
-      if (_M_impl._M_region_start == nullptr || _M_impl._M_region_end == nullptr)
-        return 0;
-
-      return (_M_impl._M_region_end - _M_impl._M_region_start);
+      return this->_size();
     }
 
     void print()
     {
       for (size_type i = 0; i < size(); i++)
       {
-        std::cout << *(_M_impl._M_region_start + i) << " , ";
+        std::cout << *(this->_M_region_start + i) << " , ";
       }
     };
   };

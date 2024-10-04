@@ -145,14 +145,6 @@ namespace mlib
             }
         }
 
-    public:
-        _M_Final_impl f_impl;
-
-        str_base() : _M_region_start(nullptr), _M_region_end(nullptr), _M_region_capacity(nullptr), _M_sso_optimized(true)
-        {
-            f_impl.sso_buff[0] = '\0';
-        }
-
         void _init_impl(pointer _buffer_, const_pointer _src_, size_type _size_, size_type _capacity_)
         {
             this->_M_region_start = &_buffer_[0];
@@ -162,6 +154,14 @@ namespace mlib
 
             _M_region_start[_size_] = '\0';
         };
+
+    public:
+        _M_Final_impl f_impl;
+
+        str_base() : _M_region_start(nullptr), _M_region_end(nullptr), _M_region_capacity(nullptr), _M_sso_optimized(true)
+        {
+            f_impl.sso_buff[0] = '\0';
+        }
 
         str_base(const_pointer _src_, size_type _size_)
         {
