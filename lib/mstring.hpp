@@ -1,7 +1,9 @@
 #pragma once
 #include "mallocator.hpp"
+#include <iostream>
 #define _DEF_STR_CAPACITY 1
 #define _AMORT_FAC 2
+#define _SSO_DEOPTIMIZER_THRESHOLD 10
 
 namespace mlib
 {
@@ -120,84 +122,75 @@ namespace mlib
         typedef _traits::difference_type difference_type;
 
         _Alloc _M_allocator;
+        pointer _M_region_start;
+        pointer _M_region_end;
+        pointer _M_region_capacity;
 
-        struct impl_data
+        union _M_Final_impl
         {
-            pointer _M_region_start;
-            pointer _M_region_end;
-            pointer _M_region_capacity;
-
-            impl_data() : _M_region_capacity(nullptr), _M_region_end(nullptr), _M_region_start(nullptr) {};
-            impl_data(pointer _s_, pointer _e_, pointer _c_) : _M_region_start(_s_), _M_region_capacity(_c_), _M_region_end(_e_) {};
-            impl_data(impl_data &&_other_) : _M_region_start(_other_._M_region_start),
-                                             _M_region_end(_other_._M_region_end),
-                                             _M_region_capacity(_other_._M_region_capacity)
-            {
-                _other_._M_region_capacity = _other_._M_region_start = _other_._M_region_end = pointer();
-            }
-
-            impl_data(const impl_data &_other_)
-            {
-                _M_region_capacity = _other_._M_region_capacity;
-                _M_region_end = _other_._M_region_end;
-                _M_region_start = _other_._M_region_start;
-            }
-
-            impl_data &operator=(const impl_data &_other_)
-            {
-                _M_region_capacity = _other_._M_region_capacity;
-                _M_region_end = _other_._M_region_end;
-                _M_region_start = _other_._M_region_start;
-                return *this;
-            }
-
-            void _copy_data(const impl_data &_other_)
-            {
-                _M_region_capacity = _other_._M_region_capacity;
-                _M_region_end = _other_._M_region_end;
-                _M_region_start = _other_._M_region_start;
-            };
-
-            void _copy_data(pointer _s_, pointer _c_)
-            {
-                if (_s_ == nullptr)
-                {
-                    std::cout << "null";
-                }
-
-                if (_c_ == nullptr)
-                {
-                    std::cout << "null";
-                }
-
-                _M_region_start = _s_;
-                _M_region_end = _s_;
-                _M_region_capacity = _c_;
-            };
-
-            ~impl_data()
-            {
-                _M_region_start = nullptr;
-                _M_region_capacity = nullptr;
-                _M_region_end = nullptr;
-            };
+            char_type sso_buff[_SSO_DEOPTIMIZER_THRESHOLD];
+            pointer _M_heap_region;
         };
 
-        impl_data _M_impl;
+        bool _M_sso_optimized;
+
+        void _fill_buffer(pointer buff, const_pointer _src_, size_type size)
+        {
+
+            size_type safe_i = 0;
+            for (size_type i = 0; i < size; i++)
+            {
+                *(buff + i) = *(_src_ + safe_i);
+                safe_i++;
+            }
+        }
 
     public:
-        str_base() {};
+        _M_Final_impl f_impl;
 
-        str_base(const str_base &_other_)
+        str_base() : _M_region_start(nullptr), _M_region_end(nullptr), _M_region_capacity(nullptr), _M_sso_optimized(true)
         {
-            this->_M_impl = _other_._M_impl;
-        };
-        str_base(str_base &&_other_)
+            f_impl.sso_buff[0] = '\0';
+        }
+
+        void _init_impl(pointer _buffer_, const_pointer _src_, size_type _size_, size_type _capacity_)
         {
-            this->_M_impl = _other_._M_impl;
+            this->_M_region_start = &_buffer_[0];
+            this->_M_region_end = &_buffer_[0 + _size_];
+            this->_M_region_capacity = &_buffer_[_capacity_];
+            _fill_buffer(_buffer_, _src_, _size_);
+
+            _M_region_start[_size_] = '\0';
         };
 
-        ~str_base() {};
+        str_base(const_pointer _src_, size_type _size_)
+        {
+            if (_size_ <= _SSO_DEOPTIMIZER_THRESHOLD)
+            {
+                _init_impl(f_impl.sso_buff, _src_, _size_, _SSO_DEOPTIMIZER_THRESHOLD);
+                _M_sso_optimized = true;
+            }
+            else
+            {
+                size_type capacity = _size_ * _AMORT_FAC;
+                f_impl._M_heap_region = _M_allocator.allocate(capacity);
+                _init_impl(f_impl._M_heap_region, _src_, _size_, capacity);
+                _M_sso_optimized = false;
+            }
+        };
+
+        size_type _inner_size() const
+        {
+            return char_traits<T>::length(_M_region_start);
+        };
+
+        ~str_base()
+        {
+            if (!this->_M_sso_optimized)
+            {
+                _M_allocator.destroy(this->f_impl._M_heap_region);
+            };
+        };
     };
 
     template <typename T,
@@ -215,39 +208,38 @@ namespace mlib
         typedef typename base::difference_type difference_type;
 
         base _M_base;
-        typename base::impl_data _M_impl;
-        void _fill_buffer(pointer const buff, const_pointer _src_, size_type size)
-        {
-            size_type safe_i = 0;
-            for (size_type i = 0; i < size; i++)
-            {
-                *(buff + i) = *(_src_ + safe_i);
-                safe_i++;
-            }
-        }
 
     public:
-        basic_string() {
+        basic_string() : str_base<T, _CTraits, _Alloc>("", 0) {
 
-        };
+                         };
 
-        basic_string(const T *_src_)
-        {
-            size_type size = char_traits<T>::length(_src_);
-            size_type capacity = size * _AMORT_FAC;
-            pointer start = this->_M_allocator.allocate(capacity);
-            this->_M_impl._copy_data(start, start + capacity);
-            _fill_buffer(this->_M_impl._M_region_start, _src_, size);
-        };
+        basic_string(const T *_src_) : str_base<T, _CTraits, _Alloc>(_src_, char_traits<T>::length(_src_)) {
+
+                                       };
 
         size_type size() const noexcept
         {
-            return char_traits<T>::length(_M_impl._M_region_start);
+            return this->_inner_size();
         };
 
         size_type length() const noexcept
         {
             return size();
+        };
+
+        friend std::ostream &operator<<(std::ostream &_os_, const basic_string &_str_)
+        {
+            if (_str_.size() < _SSO_DEOPTIMIZER_THRESHOLD)
+            {
+                std::cout << _str_.f_impl.sso_buff;
+            }
+            else
+            {
+                std::cout << _str_.f_impl._M_heap_region;
+            }
+
+            return _os_;
         };
     };
 
