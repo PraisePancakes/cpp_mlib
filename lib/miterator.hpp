@@ -34,23 +34,19 @@ namespace mlib
     {
     };
 
-    template <typename Iterator>
-    struct init_iterator_traits<Iterator,
-                                mlib::void_t<typename Iterator::iterator_category,
-                                             typename Iterator::value_type,
-                                             typename Iterator::difference_type,
-                                             typename Iterator::pointer,
-                                             typename Iterator::reference>>
+    template <typename T>
+    struct init_iterator_traits<T>
     {
-        typedef typename Iterator::iterator_category iterator_category;
-        typedef typename Iterator::value_type value_type;
-        typedef typename Iterator::difference_type difference_type;
-        typedef typename Iterator::pointer pointer;
-        typedef typename Iterator::reference reference;
+        typedef random_access_iterator_tag iterator_category;
+        typedef T value_type;
+        typedef T *pointer;
+        typedef T &reference;
+        typedef size_t size_type;
+        typedef std::ptrdiff_t difference_type;
     };
 
-    template <typename Iter>
-    struct iterator_traits : init_iterator_traits<Iter>
+    template <typename T>
+    struct iterator_traits : init_iterator_traits<T>
     {
     };
 
@@ -70,8 +66,10 @@ namespace mlib
     {
         typedef random_access_iterator_tag iterator_category;
         typedef T value_type;
-        typedef const T *pointer;
-        typedef const T &reference;
+        typedef T *pointer;
+        typedef T &reference;
+        typedef const T *const_pointer;
+        typedef const T &const_reference;
         typedef std::ptrdiff_t difference_type;
         typedef size_t size_type;
     };
@@ -87,7 +85,6 @@ namespace mlib
 
         normal_iterator() : _pit() {};
         normal_iterator(iter_traits::pointer _loc_) : _pit(_loc_) {};
-        normal_iterator(iter_traits::reference _loc_) : _pit(_loc_) {};
 
         iter_traits::reference operator[](iter_traits::difference_type _i_) const noexcept
         {
@@ -97,6 +94,7 @@ namespace mlib
         normal_iterator &operator=(const normal_iterator<Iterator> &_other_)
         {
             this->_pit = _other_._pit;
+            return *this;
         };
 
         normal_iterator &operator++()

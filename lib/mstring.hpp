@@ -1,5 +1,6 @@
 #pragma once
 #include "mallocator.hpp"
+#include "miterator.hpp"
 #include <iostream>
 #define _DEF_STR_CAPACITY 1
 #define _AMORT_FAC 2
@@ -121,18 +122,18 @@ namespace mlib
         typedef _traits::size_type size_type;
         typedef _traits::difference_type difference_type;
 
-        _Alloc _M_allocator;
-        pointer _M_region_start;
-        pointer _M_region_end;
-        pointer _M_region_capacity;
+        _Alloc m_allocator;
+        pointer m_region_start;
+        pointer m_region_end;
+        pointer m_region_capacity;
 
-        union _M_Final_impl
+        union m_Final_impl
         {
             char_type sso_buff[_SSO_DEOPTIMIZER_THRESHOLD];
-            pointer _M_heap_region;
+            pointer m_heap_region;
         };
 
-        bool _M_sso_optimized;
+        bool m_sso_optimized;
 
         void _fill_buffer(pointer buff, const_pointer _src_, size_type size)
         {
@@ -147,18 +148,18 @@ namespace mlib
 
         void _init_impl(pointer _buffer_, const_pointer _src_, size_type _size_, size_type _capacity_)
         {
-            this->_M_region_start = &_buffer_[0];
-            this->_M_region_end = &_buffer_[0 + _size_];
-            this->_M_region_capacity = &_buffer_[_capacity_];
+            this->m_region_start = &_buffer_[0];
+            this->m_region_end = &_buffer_[0 + _size_];
+            this->m_region_capacity = &_buffer_[_capacity_];
             _fill_buffer(_buffer_, _src_, _size_);
 
-            _M_region_start[_size_] = '\0';
+            m_region_start[_size_] = '\0';
         };
 
     public:
-        _M_Final_impl f_impl;
+        m_Final_impl f_impl;
 
-        str_base() : _M_region_start(nullptr), _M_region_end(nullptr), _M_region_capacity(nullptr), _M_sso_optimized(true)
+        str_base() : m_region_start(nullptr), m_region_end(nullptr), m_region_capacity(nullptr), m_sso_optimized(true)
         {
             f_impl.sso_buff[0] = '\0';
         }
@@ -168,27 +169,27 @@ namespace mlib
             if (_size_ <= _SSO_DEOPTIMIZER_THRESHOLD)
             {
                 _init_impl(f_impl.sso_buff, _src_, _size_, _SSO_DEOPTIMIZER_THRESHOLD);
-                _M_sso_optimized = true;
+                m_sso_optimized = true;
             }
             else
             {
                 size_type capacity = _size_ * _AMORT_FAC;
-                f_impl._M_heap_region = _M_allocator.allocate(capacity);
-                _init_impl(f_impl._M_heap_region, _src_, _size_, capacity);
-                _M_sso_optimized = false;
+                f_impl.m_heap_region = m_allocator.allocate(capacity);
+                _init_impl(f_impl.m_heap_region, _src_, _size_, capacity);
+                m_sso_optimized = false;
             }
         };
 
         size_type _inner_size() const
         {
-            return char_traits<T>::length(_M_region_start);
+            return char_traits<T>::length(m_region_start);
         };
 
         ~str_base()
         {
-            if (!this->_M_sso_optimized)
+            if (!this->m_sso_optimized)
             {
-                _M_allocator.destroy(this->f_impl._M_heap_region);
+                m_allocator.destroy(this->f_impl.m_heap_region);
             };
         };
     };
@@ -206,8 +207,12 @@ namespace mlib
         typedef typename base::const_pointer const_pointer;
         typedef typename base::size_type size_type;
         typedef typename base::difference_type difference_type;
+        typedef mlib::normal_iterator<T> iterator;
+        typedef mlib::normal_iterator<const T> const_iterator;
+        typedef mlib::reverse_iterator<T> reverse_iterator;
+        typedef mlib::reverse_iterator<const T> const_reverse_iterator;
 
-        base _M_base;
+        base m_base;
 
     public:
         basic_string() : str_base<T, _CTraits, _Alloc>("", 0) {
@@ -228,6 +233,26 @@ namespace mlib
             return size();
         };
 
+        iterator begin() const
+        {
+            return iterator(this->m_region_start);
+        }
+
+        reverse_iterator rbegin() const
+        {
+            return reverse_iterator(this->m_region_end - 1);
+        }
+
+        reverse_iterator rend() const
+        {
+            return reverse_iterator(this->m_region_start - 1);
+        }
+
+        iterator end() const
+        {
+            return iterator(this->m_region_end);
+        }
+
         friend std::ostream &operator<<(std::ostream &_os_, const basic_string &_str_)
         {
             if (_str_.size() < _SSO_DEOPTIMIZER_THRESHOLD)
@@ -236,7 +261,7 @@ namespace mlib
             }
             else
             {
-                std::cout << _str_.f_impl._M_heap_region;
+                std::cout << _str_.f_impl.m_heap_region;
             }
 
             return _os_;

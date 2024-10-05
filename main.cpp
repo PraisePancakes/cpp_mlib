@@ -5,16 +5,13 @@
 
 int main()
 {
-  mlib::vec<int> s;
+  mlib::string s = "hello";
 
-  s.push_back(8);
-  s.push_back(8);
+  mlib::normal_iterator<char> it;
 
-  s.push_back(8);
-  s.print();
-
-  s.for_each([](int &x)
-             { std::cout << (x = x + 4) << std::endl; });
-
+  for (it = s.begin(); it != s.end(); ++it)
+  {
+    std::cout << *it;
+  };
   return 0;
 }
