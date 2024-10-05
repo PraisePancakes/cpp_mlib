@@ -88,28 +88,8 @@ namespace mlib
     void _resize_by_offset(const size_t _capacity_size_offset_)
     {
       size_t current_size = _size();
-      size_t new_capacity = current_size + _capacity_size_offset_;
-      pointer new_start = this->_M_alloc.reallocate(this->_M_region_start, new_capacity);
-
-      if (!new_start)
-      {
-        throw std::bad_alloc();
-      }
-
-      if (new_start != this->_M_region_start)
-      {
-        this->_M_region_start = new_start;
-        this->_M_region_end = new_start + current_size;
-        this->_M_region_capacity = new_start + new_capacity;
-      }
-    }
-
-    void _resize_by_amortization()
-    {
-      size_t current_size = _size();
       size_t current_capacity = _capacity();
-      size_t new_capacity((current_capacity + 1) << 1);
-
+      size_t new_capacity = current_capacity + _capacity_size_offset_;
       pointer new_start = this->_M_alloc.reallocate(this->_M_region_start, new_capacity);
 
       if (!new_start)
@@ -124,6 +104,11 @@ namespace mlib
         this->_M_region_capacity = new_start + new_capacity;
       }
     }
+
+    size_t _calculate_amortized_growth()
+    {
+      return ((_capacity() + 1) << 1);
+    };
 
     size_t _size() const
     {
@@ -313,8 +298,8 @@ namespace mlib
 
       return *(this->_M_region_start + _ptr_index_);
     };
-
-    void for_each(std::function<void(reference)> _functor_) noexcept
+    // void(*_functor_)(reference)
+    void for_each(void (*_functor_)(reference)) noexcept
     {
       for (size_type i = 0; i < size(); i++)
       {
@@ -331,7 +316,7 @@ namespace mlib
     {
       if (size() >= capacity())
       {
-        this->_resize_by_amortization();
+        this->_resize_by_offset(this->_calculate_amortized_growth());
       }
 
       this->_M_alloc.construct(this->_M_region_start + size(), _v_);
@@ -367,7 +352,7 @@ namespace mlib
     {
       if (size() >= capacity())
       {
-        this->_resize_by_amortization();
+        this->_resize_by_offset(this->_calculate_amortized_growth());
       }
 
       this->_M_alloc.construct(this->_M_region_start + size(), _v_);

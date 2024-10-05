@@ -5,10 +5,16 @@
 
 int main()
 {
-  mlib::vec<int> s(15, 5);
+  mlib::vec<int> s;
 
-  std::cout << s.size() << std::endl;
+  s.push_back(8);
+  s.push_back(8);
+
+  s.push_back(8);
   s.print();
+
+  s.for_each([](int &x)
+             { std::cout << (x = x + 4) << std::endl; });
 
   return 0;
 }
