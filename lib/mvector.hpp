@@ -210,12 +210,6 @@ namespace mlib
     {
     }
 
-    bool reserve(size_type _n_)
-    {
-      this->_reserve(_n_);
-      return this->m_region_start;
-    };
-
     explicit vec(size_type _n_, const value_type &_v_) : vec_base<T, _Alloc>(_n_)
     {
 

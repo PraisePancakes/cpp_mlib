@@ -93,18 +93,17 @@ namespace mlib
             return a == b;
         };
 
-        static char_type *copy(char_type *const _dest_, const char_type *_src_, size_t _n_)
+        static void copy(char_type *const _dest_, const char_type *_src_, size_t _n_)
         {
-            char_type *pdest = _dest_;
 
             size_t safe_index = 0;
             for (size_t i = 0; i < _n_; i++)
             {
-                pdest[i] = _src_[safe_index];
+                _dest_[i] = _src_[safe_index];
                 safe_index++;
             }
 
-            return _dest_;
+            _dest_[_n_] = '\0';
         }
     };
 
@@ -126,11 +125,6 @@ namespace mlib
         typedef mlib::reverse_iterator<T> reverse_iterator;
         typedef mlib::reverse_iterator<const T> const_reverse_iterator;
 
-        _Alloc m_allocator;
-        pointer m_region_start;
-        pointer m_region_end;
-        pointer m_region_capacity;
-
         union m_Final_impl
         {
             char_type sso_buff[_SSO_DEOPTIMIZER_THRESHOLD];
@@ -138,6 +132,21 @@ namespace mlib
         };
 
         bool m_sso_optimized;
+
+        void _init_impl(pointer _buffer_, const_pointer _src_, size_type _size_, size_type _capacity_)
+        {
+            this->m_region_start = &_buffer_[0];
+            this->m_region_end = &_buffer_[0 + _size_];
+            this->m_region_capacity = &_buffer_[_capacity_];
+            _fill_buffer(_buffer_, _src_, _size_);
+        };
+
+    protected:
+        _Alloc m_allocator;
+        pointer m_region_start;
+        pointer m_region_end;
+        pointer m_region_capacity;
+        m_Final_impl f_impl;
 
         void _fill_buffer(pointer buff, const_pointer _src_, size_type size)
         {
@@ -148,18 +157,9 @@ namespace mlib
                 *(buff + i) = *(_src_ + safe_i);
                 safe_i++;
             }
+
+            buff[size] = '\0';
         }
-
-        void _init_impl(pointer _buffer_, const_pointer _src_, size_type _size_, size_type _capacity_)
-        {
-            this->m_region_start = &_buffer_[0];
-            this->m_region_end = &_buffer_[0 + _size_];
-            this->m_region_capacity = &_buffer_[_capacity_];
-            _fill_buffer(_buffer_, _src_, _size_);
-
-            m_region_start[_size_] = '\0';
-        };
-        m_Final_impl f_impl;
 
     public:
         str_base() : m_region_start(nullptr), m_region_end(nullptr), m_region_capacity(nullptr), m_sso_optimized(true)
@@ -181,6 +181,11 @@ namespace mlib
                 _init_impl(f_impl.m_heap_region, _src_, _size_, capacity);
                 m_sso_optimized = false;
             }
+        };
+
+        char_type *data() const
+        {
+            return this->m_region_start;
         };
 
         size_type size() const
@@ -239,9 +244,20 @@ namespace mlib
 
                          };
 
-        basic_string(const T *_src_) : str_base<T, _CTraits, _Alloc>(_src_, char_traits<T>::length(_src_)) {
+        basic_string(const T *_src_)
+            : str_base<T, _CTraits, _Alloc>(_src_, char_traits<T>::length(_src_)) {
 
-                                       };
+              };
+
+        basic_string(const basic_string &_other_)
+            : str_base<T, _CTraits, _Alloc>(_other_.data(), char_traits<T>::length(_other_.data())) {};
+
+        basic_string &operator=(const basic_string &_other_)
+        {
+            this->_fill_buffer(this->m_region_start, _other_.data(), _other_.size());
+
+            return *this;
+        };
 
         friend std::ostream &operator<<(std::ostream &_os_, const basic_string &_str_)
         {
