@@ -5,12 +5,10 @@
 
 int main()
 {
-  mlib::string s = "hello";
-  mlib::string s1(s);
 
-
-
-  std::cout << s1;
-
+  mlib::string s1("hello");
+  mlib::string s3("hi");
+  mlib::string s2 = s3 + s1;
+  std::cout << s2;
   return 0;
 }
