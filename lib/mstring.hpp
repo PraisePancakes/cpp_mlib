@@ -112,7 +112,7 @@ namespace mlib
     class str_base
     {
 
-    protected:
+    private:
         typedef _CTraits _traits;
         typedef T char_type;
         typedef T *pointer;
@@ -121,6 +121,10 @@ namespace mlib
 
         typedef _traits::size_type size_type;
         typedef _traits::difference_type difference_type;
+        typedef mlib::normal_iterator<T> iterator;
+        typedef mlib::normal_iterator<const T> const_iterator;
+        typedef mlib::reverse_iterator<T> reverse_iterator;
+        typedef mlib::reverse_iterator<const T> const_reverse_iterator;
 
         _Alloc m_allocator;
         pointer m_region_start;
@@ -155,10 +159,9 @@ namespace mlib
 
             m_region_start[_size_] = '\0';
         };
-
-    public:
         m_Final_impl f_impl;
 
+    public:
         str_base() : m_region_start(nullptr), m_region_end(nullptr), m_region_capacity(nullptr), m_sso_optimized(true)
         {
             f_impl.sso_buff[0] = '\0';
@@ -180,58 +183,15 @@ namespace mlib
             }
         };
 
-        size_type _inner_size() const
+        size_type size() const
         {
             return char_traits<T>::length(m_region_start);
         };
 
-        ~str_base()
-        {
-            if (!this->m_sso_optimized)
-            {
-                m_allocator.destroy(this->f_impl.m_heap_region);
-            };
-        };
-    };
-
-    template <typename T,
-              typename _CTraits = char_traits<T>,
-              typename _Alloc = allocator<T>>
-    class basic_string : public str_base<T, _CTraits, _Alloc>
-    {
-
-        typedef _CTraits _traits;
-        typedef allocator_traits<T> alloc_traits;
-        typedef str_base<T, _CTraits, _Alloc> base;
-        typedef typename base::pointer pointer;
-        typedef typename base::const_pointer const_pointer;
-        typedef typename base::size_type size_type;
-        typedef typename base::difference_type difference_type;
-        typedef mlib::normal_iterator<T> iterator;
-        typedef mlib::normal_iterator<const T> const_iterator;
-        typedef mlib::reverse_iterator<T> reverse_iterator;
-        typedef mlib::reverse_iterator<const T> const_reverse_iterator;
-
-        base m_base;
-
-    public:
-        basic_string() : str_base<T, _CTraits, _Alloc>("", 0) {
-
-                         };
-
-        basic_string(const T *_src_) : str_base<T, _CTraits, _Alloc>(_src_, char_traits<T>::length(_src_)) {
-
-                                       };
-
-        size_type size() const noexcept
-        {
-            return this->_inner_size();
-        };
-
-        size_type length() const noexcept
+        size_type length() const
         {
             return size();
-        };
+        }
 
         iterator begin() const
         {
@@ -252,6 +212,36 @@ namespace mlib
         {
             return iterator(this->m_region_end);
         }
+
+        ~str_base()
+        {
+            if (!this->m_sso_optimized)
+            {
+                m_allocator.destroy(this->f_impl.m_heap_region);
+            };
+        };
+    };
+
+    template <typename T,
+              typename _CTraits = char_traits<T>,
+              typename _Alloc = allocator<T>>
+    class basic_string : public str_base<T, _CTraits, _Alloc>
+    {
+
+        typedef _CTraits _traits;
+        typedef allocator_traits<T> alloc_traits;
+        typedef str_base<T, _CTraits, _Alloc> base;
+
+        base m_base;
+
+    public:
+        basic_string() : str_base<T, _CTraits, _Alloc>("", 0) {
+
+                         };
+
+        basic_string(const T *_src_) : str_base<T, _CTraits, _Alloc>(_src_, char_traits<T>::length(_src_)) {
+
+                                       };
 
         friend std::ostream &operator<<(std::ostream &_os_, const basic_string &_str_)
         {

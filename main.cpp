@@ -5,13 +5,7 @@
 
 int main()
 {
-  mlib::string s = "hello";
-
-  mlib::normal_iterator<char> it;
-
-  for (it = s.begin(); it != s.end(); ++it)
-  {
-    std::cout << *it;
-  };
+  mlib::string s = "hi";
+  
   return 0;
 }

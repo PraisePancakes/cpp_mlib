@@ -68,6 +68,11 @@ namespace mlib
     pointer m_region_end;
     pointer m_region_capacity;
 
+    typedef mlib::normal_iterator<pointer> iterator;
+    typedef mlib::normal_iterator<const pointer> const_iterator;
+    typedef mlib::reverse_iterator<pointer> reverse_iterator;
+    typedef mlib::reverse_iterator<const pointer> const_reverse_iterator;
+
     vec_base() : m_alloc(nullptr), m_region_start(nullptr), m_region_end(nullptr), m_region_capacity(nullptr) {};
 
     vec_base(size_t _capacity_)
@@ -84,21 +89,11 @@ namespace mlib
       m_region_end = m_region_start;
       m_region_capacity = m_region_start + _capacity_;
     };
-    void _reserve(size_t _capacity_)
-    {
-      m_region_start = m_alloc.allocate(_capacity_);
-      if (!m_region_start)
-      {
-        return;
-      }
-      m_region_end = m_region_start;
-      m_region_capacity = m_region_start + _capacity_;
-    };
 
     void _resize_by_offset(const size_t _capacity_size_offset_)
     {
-      size_t current_size = _size();
-      size_t current_capacity = _capacity();
+      size_t current_size = m_region_end - m_region_start;
+      size_t current_capacity = m_region_capacity - m_region_start;
       size_t new_capacity = current_capacity + _capacity_size_offset_;
       pointer new_start = this->m_alloc.reallocate(this->m_region_start, new_capacity);
 
@@ -117,31 +112,64 @@ namespace mlib
 
     size_t _calculate_amortized_growth()
     {
-      return ((_capacity() + 1) << 1);
+      return ((m_region_capacity - m_region_start + 1) << 1);
     };
 
-    size_t _size() const
+  public:
+    inline size_t size() const
     {
       return m_region_end - m_region_start;
     };
 
-    size_t _capacity() const
+    inline size_t capacity() const
     {
       return m_region_capacity - m_region_start;
     }
 
-    void _clear()
+    void reserve(size_t _capacity_)
+    {
+      m_region_start = m_alloc.allocate(_capacity_);
+      if (!m_region_start)
+      {
+        return;
+      }
+      m_region_end = m_region_start;
+      m_region_capacity = m_region_start + _capacity_;
+    };
+
+    void
+    clear()
     {
       if (m_region_start)
       {
-        for (size_t i = 0; i < _size(); i++)
+        for (size_t i = 0; i < size(); i++)
         {
           m_alloc.destroy(m_region_start + i);
         }
       }
 
       m_region_end = m_region_start;
-    };
+    }
+
+    iterator begin() const
+    {
+      return iterator(this->m_region_start);
+    }
+
+    reverse_iterator rbegin() const
+    {
+      return reverse_iterator(this->m_region_end - 1);
+    }
+
+    reverse_iterator rend() const
+    {
+      return reverse_iterator(this->m_region_start - 1);
+    }
+
+    iterator end() const
+    {
+      return iterator(this->m_region_end);
+    }
 
     vec_base(const vec_base &_other_) {
 
@@ -154,7 +182,7 @@ namespace mlib
   };
 
   template <typename T, class _Alloc = allocator<T>>
-  class vec : protected vec_base<T, _Alloc>
+  class vec : public vec_base<T, _Alloc>
   {
     typedef T value_type;
     typedef allocator_traits<T> allocator_traits;
@@ -166,10 +194,6 @@ namespace mlib
     typedef typename allocator_traits::reference reference;
     typedef ptrdiff_t difference_type;
     typedef size_t size_type;
-    typedef mlib::normal_iterator<pointer> iterator;
-    typedef mlib::normal_iterator<const pointer> const_iterator;
-    typedef mlib::reverse_iterator<pointer> reverse_iterator;
-    typedef mlib::reverse_iterator<const pointer> const_reverse_iterator;
 
   private:
   public:
@@ -219,13 +243,13 @@ namespace mlib
     */
     void insert(size_type _i_, const_reference _v_)
     {
-      if (_i_ >= size())
+      if (_i_ >= this->size())
       {
         push_back(_v_);
       }
 
       size_type si = _i_;
-      size_type e = size();
+      size_type e = this->size();
 
       while (e > si)
       {
@@ -299,7 +323,7 @@ namespace mlib
 
       for (auto it = _elems_.begin(); it != _elems_.end(); it++)
       {
-        this->m_alloc.construct(this->m_region_start + size(), *it);
+        this->m_alloc.construct(this->m_region_start + this->size(), *it);
 
         this->m_region_end++;
       }
@@ -319,7 +343,7 @@ namespace mlib
       // bound check
       size_type max_value = std::numeric_limits<size_type>::max();
 
-      if (_ptr_index_ >= size() || _ptr_index_ == max_value)
+      if (_ptr_index_ >= this->size() || _ptr_index_ == max_value)
       {
         throw std::out_of_range("\nIndex succeeded bound with overflowed/underflowed range index, out of range ");
       }
@@ -329,7 +353,7 @@ namespace mlib
     // void(*_functor_)(reference)
     void for_each(void (*_functor_)(reference)) noexcept
     {
-      for (size_type i = 0; i < size(); i++)
+      for (size_type i = 0; i < this->size(); i++)
       {
         _functor_(*(this->m_region_start + i));
       }
@@ -337,17 +361,17 @@ namespace mlib
 
     bool empty() const
     {
-      return size() == 0;
+      return this->size() == 0;
     }
 
     void push_back(const_reference _v_)
     {
-      if (size() >= capacity())
+      if (this->size() >= this->capacity())
       {
         this->_resize_by_offset(this->_calculate_amortized_growth());
       }
 
-      this->m_alloc.construct(this->m_region_start + size(), _v_);
+      this->m_alloc.construct(this->m_region_start + this->size(), _v_);
       this->m_region_end++;
     }
 
@@ -378,12 +402,12 @@ namespace mlib
 
     void push_back(reference &_v_)
     {
-      if (size() >= capacity())
+      if (this->size() >= this->capacity())
       {
         this->_resize_by_offset(this->_calculate_amortized_growth());
       }
 
-      this->m_alloc.construct(this->m_region_start + size(), _v_);
+      this->m_alloc.construct(this->m_region_start + this->size(), _v_);
       this->m_region_end++;
     }
 
@@ -396,35 +420,9 @@ namespace mlib
       }
     }
 
-    void
-    clear()
-    {
-      this->_clear();
-    }
-
-    iterator begin() const
-    {
-      return iterator(this->m_region_start);
-    }
-
-    reverse_iterator rbegin() const
-    {
-      return reverse_iterator(this->m_region_end - 1);
-    }
-
-    reverse_iterator rend() const
-    {
-      return reverse_iterator(this->m_region_start - 1);
-    }
-
-    iterator end() const
-    {
-      return iterator(this->m_region_end);
-    }
-
     bool contains(value_type _v_)
     {
-      for (size_type i = 0; i < size(); i++)
+      for (size_type i = 0; i < this->size(); i++)
       {
         if (*(this->m_region_start + i) == _v_)
         {
@@ -491,9 +489,9 @@ namespace mlib
         __start__ = 0;
       }
 
-      if (__end__ >= size())
+      if (__end__ >= this->size())
       {
-        __end__ = size();
+        __end__ = this->size();
       }
 
       if (__start__ > __end__)
@@ -513,29 +511,19 @@ namespace mlib
       return v;
     }
 
-    inline size_type capacity() const
-    {
-      return this->_capacity();
-    }
-
     void pop_back() noexcept
     {
       if (empty())
       {
         return;
       }
-      this->m_alloc.destroy(this->m_region_start + size());
+      this->m_alloc.destroy(this->m_region_start + this->size());
       this->m_region_end--;
     };
 
-    inline size_type size() const
-    {
-      return this->_size();
-    }
-
     void print()
     {
-      for (size_type i = 0; i < size(); i++)
+      for (size_type i = 0; i < this->size(); i++)
       {
         std::cout << *(this->m_region_start + i) << " , ";
       }
