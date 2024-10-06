@@ -6,9 +6,9 @@
 int main()
 {
 
-  mlib::string s1("hello");
-  mlib::string s3("hi");
-  mlib::string s2 = s3 + s1;
-  std::cout << s2;
+  mlib::string s1("hellooooooooo");
+
+  std::cout << s1.size();
+  std::cout << s1;
   return 0;
 }
