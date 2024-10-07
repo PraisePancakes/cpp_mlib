@@ -120,10 +120,6 @@ namespace mlib
 
         typedef _traits::size_type size_type;
         typedef _traits::difference_type difference_type;
-        typedef mlib::normal_iterator<T> iterator;
-        typedef mlib::normal_iterator<const T> const_iterator;
-        typedef mlib::reverse_iterator<T> reverse_iterator;
-        typedef mlib::reverse_iterator<const T> const_reverse_iterator;
 
         union m_Final_impl
         {
@@ -148,6 +144,12 @@ namespace mlib
         pointer m_region_end;
         pointer m_region_capacity;
         m_Final_impl f_impl;
+
+    public:
+        typedef mlib::normal_iterator<T *> iterator;
+        typedef mlib::normal_iterator<const T *> const_iterator;
+        typedef mlib::reverse_iterator<T *> reverse_iterator;
+        typedef mlib::reverse_iterator<const T *> const_reverse_iterator;
 
     public:
         str_base() : m_region_start(nullptr), m_region_end(nullptr), m_region_capacity(nullptr), m_sso_optimized(true)
@@ -195,6 +197,16 @@ namespace mlib
         {
             return iterator(this->m_region_start);
         }
+        const_iterator cbegin() const
+        {
+
+            return const_iterator(this->m_region_start);
+        };
+
+        const_iterator cend() const
+        {
+            return const_iterator(this->m_region_end);
+        };
 
         reverse_iterator rbegin() const
         {

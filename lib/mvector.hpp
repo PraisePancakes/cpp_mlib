@@ -60,6 +60,7 @@ namespace mlib
   template <typename T, class _Alloc = allocator<T>>
   struct vec_base
   {
+
   protected:
     typedef _Alloc allocator_type;
     typedef typename allocator_traits<T>::pointer pointer;
@@ -67,11 +68,6 @@ namespace mlib
     pointer m_region_start;
     pointer m_region_end;
     pointer m_region_capacity;
-
-    typedef mlib::normal_iterator<pointer> iterator;
-    typedef mlib::normal_iterator<const pointer> const_iterator;
-    typedef mlib::reverse_iterator<pointer> reverse_iterator;
-    typedef mlib::reverse_iterator<const pointer> const_reverse_iterator;
 
     vec_base() : m_alloc(nullptr), m_region_start(nullptr), m_region_end(nullptr), m_region_capacity(nullptr) {};
 
@@ -116,6 +112,12 @@ namespace mlib
     };
 
   public:
+    typedef mlib::normal_iterator<T *> iterator;
+    typedef mlib::normal_iterator<const T *> const_iterator;
+    typedef mlib::reverse_iterator<T *> reverse_iterator;
+    typedef mlib::reverse_iterator<const T *> const_reverse_iterator;
+
+  public:
     inline size_t size() const
     {
       return m_region_end - m_region_start;
@@ -155,6 +157,17 @@ namespace mlib
     {
       return iterator(this->m_region_start);
     }
+
+    const_iterator cbegin() const
+    {
+
+      return const_iterator(this->m_region_start);
+    };
+
+    const_iterator cend() const
+    {
+      return const_iterator(this->m_region_end);
+    };
 
     reverse_iterator rbegin() const
     {

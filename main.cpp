@@ -6,19 +6,15 @@
 int main()
 {
 
-  mlib::string s1("this is not sso");
-  mlib::string s2("sso");
+  mlib::string v("hi");
 
-  std::cout << s1.size() << std::endl;
-  std::cout << s2.size() << std::endl;
-  std::cout << s1.size() + s2.size() << std::endl;
+  mlib::string::iterator it;
+  // or mlib::vec<char>::iterator it;
 
-  s1 = s1 + s2;
-
-  std::cout << s1.size() << std::endl;
-
-  std::cout << s1 << std::endl;
-  std::cout << s2 << std::endl;
+  for (it = v.begin(); it != v.end(); ++it)
+  {
+    std::cout << *it << std::endl;
+  }
 
   return 0;
 }
