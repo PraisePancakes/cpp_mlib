@@ -54,6 +54,8 @@ namespace mlib
             {
                 _dest_[i] = _src_[i];
             }
+
+            _dest_[_n_] = '\0';
         }
     };
 
@@ -100,6 +102,8 @@ namespace mlib
             {
                 _dest_[i] = _src_[i];
             }
+
+            _dest_[_n_] = '\0';
         }
     };
 
@@ -145,7 +149,7 @@ namespace mlib
         pointer m_region_capacity;
         m_Final_impl f_impl;
 
-        public:
+    public:
         str_base() : m_region_start(nullptr), m_region_end(nullptr), m_region_capacity(nullptr), m_sso_optimized(true)
         {
             f_impl.sso_buff[0] = '\0';
@@ -257,15 +261,7 @@ namespace mlib
 
         friend std::ostream &operator<<(std::ostream &_os_, const basic_string &_str_)
         {
-            if (_str_.size() < _SSO_DEOPTIMIZER_THRESHOLD)
-            {
-                std::cout << _str_.f_impl.sso_buff;
-            }
-            else
-            {
-                std::cout << _str_.f_impl.m_heap_region;
-            }
-
+            std::cout << _str_.data();
             return _os_;
         };
     };
@@ -273,45 +269,34 @@ namespace mlib
     typedef basic_string<char> string;
     typedef basic_string<wchar_t> wstring;
 
-    // namespace MLIB_STRING_IMPL_HELPER
-    // {
-    //     template <typename T>
-    //     basic_string<T> concat(const T *_lhs_, const T *_rhs_, size_t size)
-    //     {
-    //         const size_t new_size = size;
-    //         const size_t lhs_size = mlib::char_traits<T>::length(_lhs_);
-    //         const size_t rhs_size = size - lhs_size;
+    namespace MLIB_STRING_IMPL_HELPER
+    {
+        template <typename T>
+        basic_string<T> concat(const T *_lhs_, const T *_rhs_, size_t new_size)
+        {
 
-    //         basic_string<T>
-    //             new_string(new_size);
-    //         size_t i = 0;
-    //         for (; i < lhs_size; i++)
-    //         {
-    //             new_string[i] = _lhs_[i];
-    //         }
+            const size_t lhs_size = mlib::char_traits<T>::length(_lhs_);
+            const size_t rhs_size = new_size - lhs_size;
 
-    //         size_t o_idx = 0;
-    //         for (; o_idx < rhs_size; o_idx++, i++)
-    //         {
-    //             new_string[i] = _rhs_[o_idx];
-    //         }
+            basic_string<T> new_string(new_size);
 
-    //         new_string[i] = '\0';
+            char_traits<T>::copy(new_string.data(), _lhs_, lhs_size);
+            char_traits<T>::copy(new_string.data() + lhs_size, _rhs_, rhs_size);
 
-    //         return new_string;
-    //     };
-    // };
+            return new_string;
+        };
+    };
 
-    // template <typename T>
-    // basic_string<T> operator+(const basic_string<T> &lhs, const basic_string<T> &rhs)
-    // {
-    //     return MLIB_STRING_IMPL_HELPER::concat(lhs.data(), rhs.data(), lhs.size() + rhs.size());
-    // };
+    template <typename T>
+    basic_string<T> operator+(const basic_string<T> &lhs, const basic_string<T> &rhs)
+    {
+        return MLIB_STRING_IMPL_HELPER::concat(lhs.data(), rhs.data(), lhs.size() + rhs.size());
+    };
 
-    // template <typename T>
-    // basic_string<T> operator+(const basic_string<T> &lhs, const char *rhs)
-    // {
-    //     return MLIB_STRING_IMPL_HELPER::concat(lhs.data(), rhs, lhs.size() + mlib::char_traits<T>::length(rhs));
-    // };
+    template <typename T>
+    basic_string<T> operator+(const basic_string<T> &lhs, const char *rhs)
+    {
+        return MLIB_STRING_IMPL_HELPER::concat(lhs.data(), rhs, lhs.size() + mlib::char_traits<T>::length(rhs));
+    };
 
 };
