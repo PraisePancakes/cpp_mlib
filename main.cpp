@@ -2,19 +2,18 @@
 #include <cstring>
 #include "lib/mstring.hpp"
 #include "lib/mvector.hpp"
+#include "lib/mtest.hpp"
 
 int main()
 {
+  mlib::mtester t;
 
-  mlib::string v("hi");
+  t.push_operation<int, int>(2, [](int x) -> bool
+                             { return x == 2; }, true);
+  t.push_operation<char, int>('a', [](char x) -> bool
+                              { return x == 'v'; }, true);
 
-  mlib::string::iterator it;
-  // or mlib::vec<char>::iterator it;
-
-  for (it = v.begin(); it != v.end(); ++it)
-  {
-    std::cout << *it << std::endl;
-  }
+  t.run_tests();
 
   return 0;
 }

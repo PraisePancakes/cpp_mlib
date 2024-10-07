@@ -21,7 +21,8 @@ add_library(${PROJECT_NAME} SHARED
     lib/mallocator.hpp
     lib/miterator.hpp
     lib/mttraits.hpp
-    lib/mstring.hpp)
+    lib/mstring.hpp
+    lib/mtest.hpp)
 
 set_target_properties(
     ${PROJECT_NAME} PROPERTIES
@@ -66,6 +67,7 @@ add_executable(${EXEC_NAME}
     lib/miterator.hpp
     lib/mttraits.hpp
     lib/mstring.hpp
+    lib/mtest.hpp
 )
 
 message("Processing CMakeLists.txt")
