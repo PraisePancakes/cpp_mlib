@@ -227,10 +227,13 @@ namespace mlib
 
     vec(vec<value_type> &&_other_) : vec_base<T, _Alloc>(_other_.capacity())
     {
-      for (size_t i = 0; i < _other_.size(); i++)
-      {
-        push_back(_other_[i]);
-      }
+      this->m_region_start = _other_.m_region_start;
+      this->m_region_end = _other_.m_region_end;
+      this->m_region_capacity = _other_.m_region_capacity;
+
+      _other_.m_region_capacity = nullptr;
+      _other_.m_region_start = nullptr;
+      _other_.m_region_end = nullptr;
     };
 
     explicit vec(size_type _n_, const value_type &_v_) : vec_base<T, _Alloc>(_n_)

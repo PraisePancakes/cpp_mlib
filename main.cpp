@@ -8,8 +8,9 @@ int main()
 {
 
   mlib::vec<int> v2(mlib::vec<int>{0, 1, 2, 3});
+  mlib::vec<int> v(std::move(v2));
 
-  v2.print();
+  v.print();
 
   mlib::mtester t;
 
