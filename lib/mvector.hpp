@@ -216,12 +216,22 @@ namespace mlib
     vec(size_type _n_) : vec_base<T, _Alloc>(_n_) {
 
                          };
-    vec(const vec_base<value_type> _other_) : vec_base<T, _Alloc>(_other_.size())
+
+    vec(const vec<value_type> &_other_) : vec_base<T, _Alloc>(_other_.capacity())
     {
+      for (size_t i = 0; i < _other_.size(); i++)
+      {
+        push_back(_other_[i]);
+      }
     }
-    vec(const vec<value_type> &_other_) : vec_base<T, _Alloc>(_other_.size())
+
+    vec(vec<value_type> &&_other_) : vec_base<T, _Alloc>(_other_.capacity())
     {
-    }
+      for (size_t i = 0; i < _other_.size(); i++)
+      {
+        push_back(_other_[i]);
+      }
+    };
 
     explicit vec(size_type _n_, const value_type &_v_) : vec_base<T, _Alloc>(_n_)
     {
@@ -238,7 +248,12 @@ namespace mlib
 
       if (this != &_other_)
       {
-        _deep_copy(_other_);
+        this->clear();
+        this->_resize_by_offset(_other_.capacity() - this->capacity());
+        for (size_t i = 0; i < _other_.size(); i++)
+        {
+          push_back(_other_[i]);
+        }
       }
       return *this;
     }
@@ -327,12 +342,9 @@ namespace mlib
 
     vec(std::initializer_list<value_type> _elems_) : vec_base<T, _Alloc>(_elems_.size())
     {
-
       for (auto it = _elems_.begin(); it != _elems_.end(); it++)
       {
-        this->m_alloc.construct(this->m_region_start + this->size(), *it);
-
-        this->m_region_end++;
+        push_back(*it);
       }
     };
 
