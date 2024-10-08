@@ -57,13 +57,13 @@ namespace mlib
    *
    */
 
-  template <typename T, class _Alloc = allocator<T>>
+  template <typename T, class _Alloc>
   struct vec_base
   {
 
   protected:
     typedef _Alloc allocator_type;
-    typedef typename allocator_traits<T>::pointer pointer;
+    typedef typename allocator_traits<_Alloc>::pointer pointer;
     allocator_type m_alloc;
     pointer m_region_start;
     pointer m_region_end;
@@ -190,15 +190,16 @@ namespace mlib
 
     virtual ~vec_base()
     {
-      allocator_traits<T>::deallocate(m_region_start);
+      allocator_traits<_Alloc>::deallocate(m_region_start);
     };
   };
 
   template <typename T, class _Alloc = allocator<T>>
   class vec : public vec_base<T, _Alloc>
   {
-    typedef T value_type;
-    typedef allocator_traits<T> allocator_traits;
+
+    typedef allocator_traits<_Alloc> allocator_traits;
+    typedef allocator_traits::value_type value_type;
 
   public:
     typedef typename allocator_traits::pointer pointer;

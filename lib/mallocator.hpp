@@ -4,15 +4,15 @@
 namespace mlib
 {
 
-    template <typename _AllocTy>
+    template <typename Alloc>
     struct allocator_traits
     {
 
-        typedef _AllocTy *pointer;
-        typedef const _AllocTy *const_pointer;
-        typedef _AllocTy value_type;
-        typedef _AllocTy &reference;
-        typedef const _AllocTy &const_reference;
+        typedef Alloc::pointer pointer;
+        typedef Alloc::const_pointer const_pointer;
+        typedef Alloc::value_type value_type;
+        typedef Alloc::reference reference;
+        typedef Alloc::const_reference const_reference;
         typedef size_t size_type;
         typedef std::ptrdiff_t difference_type;
 
@@ -78,18 +78,18 @@ namespace mlib
         };
     };
 
-    template <typename _AllocTy>
+    template <typename T>
     struct allocator
     {
 
-        typedef typename allocator_traits<_AllocTy>::pointer pointer;
-        typedef typename allocator_traits<_AllocTy>::const_pointer const_pointer;
-        typedef typename allocator_traits<_AllocTy>::value_type value_type;
-        typedef typename allocator_traits<_AllocTy>::reference reference;
-        typedef typename allocator_traits<_AllocTy>::const_reference const_reference;
+        typedef T value_type;
+        typedef T *pointer;
+        typedef const T *const_pointer;
+        typedef T &reference;
+        typedef const T &const_reference;
 
         allocator() noexcept {};
-        allocator(const allocator<_AllocTy> &_other_) noexcept {};
+        allocator(const allocator<T> &_other_) noexcept {};
 
         template <typename _OtherAllocTy>
         allocator(const allocator<_OtherAllocTy> &_other_) noexcept {};
