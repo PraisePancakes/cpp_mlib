@@ -107,16 +107,18 @@ namespace mlib
         }
     };
 
-    template <typename T, typename _CTraits, typename _Alloc>
+    template <typename T, typename _CTraits, typename _Alloc = allocator<T>>
     class str_base
     {
 
     private:
         typedef _CTraits _traits;
-        typedef T char_type;
-        typedef T *pointer;
-        typedef T &reference;
-        typedef const T *const_pointer;
+        typedef allocator_traits<_Alloc> allocator_traits;
+        typedef allocator_traits::value_type char_type;
+
+        typedef allocator_traits::pointer pointer;
+        typedef allocator_traits::reference reference;
+        typedef allocator_traits::const_pointer const_pointer;
 
         typedef _traits::size_type size_type;
         typedef _traits::difference_type difference_type;

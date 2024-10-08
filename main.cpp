@@ -5,8 +5,8 @@
 
 int main()
 {
-  mlib::vec<int> v{0, 1, 2, 3};
+  mlib::string s("hello world");
 
-  v.print();
+  std::cout << s;
   return 0;
 }
