@@ -241,10 +241,6 @@ namespace mlib
     {
 
         typedef _CTraits _traits;
-        typedef allocator_traits<T> alloc_traits;
-        typedef str_base<T, _CTraits, _Alloc> base;
-
-        base m_base;
 
     public:
         basic_string() : str_base<T, _CTraits, _Alloc>("", 0) {
