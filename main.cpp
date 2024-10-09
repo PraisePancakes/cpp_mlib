@@ -7,8 +7,10 @@
 int main()
 {
 
-  mlib::string s("hello");
-  std::cout << s.size();
-  std::cout << s;
+  static_assert(mlib::char_traits<char>::gt('b', 'a') == true);
+  static_assert(mlib::char_traits<char>::lt('a', 'b') == true);
+  static_assert(mlib::char_traits<char>::lt('b', 'a') == false);
+  static_assert(mlib::char_traits<char>::gt('a', 'b') == false);
+
   return 0;
 }

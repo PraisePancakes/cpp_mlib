@@ -36,7 +36,17 @@ namespace mlib
 
         [[nodiscard]] static constexpr bool eq(const char_type a, const char_type b) noexcept
         {
-            return a == b;
+            return static_cast<unsigned char>(a) == static_cast<unsigned char>(b);
+        };
+
+        [[nodiscard]] static constexpr bool lt(const char_type a, const char_type b) noexcept
+        {
+            return static_cast<unsigned char>(a) < static_cast<unsigned char>(b);
+        };
+
+        [[nodiscard]] static constexpr bool gt(const char_type a, const char_type b) noexcept
+        {
+            return !lt(a, b);
         };
 
         static char_type *copy(char_type *const _dest_, const char_type *const _src_, size_t _n_) noexcept
@@ -71,7 +81,17 @@ namespace mlib
 
         [[nodiscard]] static constexpr bool eq(const char_type a, const char_type b) noexcept
         {
-            return a == b;
+            return static_cast<unsigned char>(a) == static_cast<unsigned char>(b);
+        };
+
+        [[nodiscard]] static constexpr bool lt(const char_type a, const char_type b) noexcept
+        {
+            return static_cast<unsigned char>(a) < static_cast<unsigned char>(b);
+        };
+
+        [[nodiscard]] static constexpr bool gt(const char_type a, const char_type b) noexcept
+        {
+            return !lt(a, b);
         };
 
         static char_type *copy(char_type *const _dest_, const char_type *const _src_, size_t _n_) noexcept
