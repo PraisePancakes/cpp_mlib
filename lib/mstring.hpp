@@ -18,44 +18,34 @@ namespace mlib
 
     public:
         typedef char char_type;
+        typedef int int_type;
+
         typedef std::ptrdiff_t difference_type;
         typedef std::size_t size_type;
 
-        static size_t length(const char_type *const _data_)
+        [[nodiscard]] static constexpr size_t length(const char_type *_data_) noexcept
         {
-            if (_data_ == nullptr)
+            size_t count = 0;
+            while (*_data_ != char_type())
             {
-                return 0;
-            }
-            size_t len = 0;
-            const char_type *pdata = _data_;
-
-            while (*pdata != '\0')
-            {
-                len++;
-                pdata++;
+                ++count;
+                ++_data_;
             };
-
-            pdata = nullptr;
-            return len;
+            return count;
         };
 
-        static constexpr bool eq(char_type a, char_type b) noexcept
+        [[nodiscard]] static constexpr bool eq(const char_type a, const char_type b) noexcept
         {
             return a == b;
         };
 
-        static void copy(char_type *const _dest_, const char_type *_src_, size_t _n_)
+        static char_type *copy(char_type *const _dest_, const char_type *const _src_, size_t _n_) noexcept
         {
-            if (_dest_ == nullptr || _src_ == nullptr)
-                return;
-
-            for (size_t i = 0; i < _n_; i++)
+            for (size_t i = 0; i != _n_; ++i)
             {
                 _dest_[i] = _src_[i];
             }
-
-            _dest_[_n_] = '\0';
+            return _dest_;
         }
     };
 
@@ -68,54 +58,40 @@ namespace mlib
         typedef std::ptrdiff_t difference_type;
         typedef std::size_t size_type;
 
-        static size_t length(const char_type *const _data_)
+        [[nodiscard]] static constexpr size_t length(const char_type *_data_) noexcept
         {
-            if (_data_ == nullptr)
+            size_t count = 0;
+            while (*_data_ != char_type())
             {
-                return 0;
-            }
-            size_t len = 0;
-            const char_type *pdata = _data_;
-
-            while (*pdata != '\0')
-            {
-                len++;
-                pdata++;
+                ++count;
+                ++_data_;
             };
-
-            pdata = nullptr;
-            return len + 1;
+            return count;
         };
 
-        static constexpr bool eq(char_type a, char_type b) noexcept
+        [[nodiscard]] static constexpr bool eq(const char_type a, const char_type b) noexcept
         {
             return a == b;
         };
 
-        static void copy(char_type *const _dest_, const char_type *_src_, size_t _n_)
+        static char_type *copy(char_type *const _dest_, const char_type *const _src_, size_t _n_) noexcept
         {
-
-            if (_dest_ == nullptr || _src_ == nullptr)
-                return;
-
-            for (size_t i = 0; i < _n_; i++)
+            for (size_t i = 0; i != _n_; ++i)
             {
                 _dest_[i] = _src_[i];
             }
-
-            _dest_[_n_] = '\0';
+            return _dest_;
         }
     };
 
-    template <typename T, typename _CTraits, typename _Alloc = allocator<T>>
+    template <typename T, typename CTraits, typename Alloc>
     class str_base
     {
 
     private:
-        typedef _CTraits _traits;
-        typedef allocator_traits<_Alloc> allocator_traits;
+        typedef CTraits _traits;
+        typedef allocator_traits<Alloc> allocator_traits;
         typedef allocator_traits::value_type char_type;
-
         typedef allocator_traits::pointer pointer;
         typedef allocator_traits::reference reference;
         typedef allocator_traits::const_pointer const_pointer;
@@ -141,7 +117,7 @@ namespace mlib
         };
 
     protected:
-        _Alloc m_allocator;
+        Alloc m_allocator;
         pointer m_region_start;
         pointer m_region_end;
         pointer m_region_capacity;
@@ -235,25 +211,25 @@ namespace mlib
     };
 
     template <typename T,
-              typename _CTraits = char_traits<T>,
-              typename _Alloc = allocator<T>>
-    class basic_string : public str_base<T, _CTraits, _Alloc>
+              typename CTraits = char_traits<T>,
+              typename Alloc = allocator<T>>
+    class basic_string : public str_base<T, CTraits, Alloc>
     {
 
-        typedef _CTraits _traits;
+        typedef CTraits _traits;
 
     public:
-        basic_string() : str_base<T, _CTraits, _Alloc>("", 0) {
+        basic_string() : str_base<T, CTraits, Alloc>("", 0) {
 
                          };
 
         basic_string(const T *_src_)
-            : str_base<T, _CTraits, _Alloc>(_src_, char_traits<T>::length(_src_)) {
+            : str_base<T, CTraits, Alloc>(_src_, char_traits<T>::length(_src_)) {
 
               };
 
         basic_string(const basic_string &_other_)
-            : str_base<T, _CTraits, _Alloc>(_other_.data(), char_traits<T>::length(_other_.data())) {};
+            : str_base<T, CTraits, Alloc>(_other_.data(), char_traits<T>::length(_other_.data())) {};
 
         basic_string &operator=(const basic_string &_other_)
         {
@@ -262,7 +238,7 @@ namespace mlib
             return *this;
         };
 
-        basic_string(const size_t _size_) : str_base<T, _CTraits, _Alloc>("", _size_) {};
+        basic_string(const size_t _size_) : str_base<T, CTraits, Alloc>("", _size_) {};
 
         T &operator[](size_t _index_) const
         {

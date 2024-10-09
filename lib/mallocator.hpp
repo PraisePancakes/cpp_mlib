@@ -8,13 +8,14 @@ namespace mlib
     struct allocator_traits
     {
 
+        typedef Alloc allocator_type;
         typedef Alloc::pointer pointer;
         typedef Alloc::const_pointer const_pointer;
         typedef Alloc::value_type value_type;
         typedef Alloc::reference reference;
         typedef Alloc::const_reference const_reference;
-        typedef size_t size_type;
-        typedef std::ptrdiff_t difference_type;
+        typedef Alloc::size_type size_type;
+        typedef Alloc::difference_type difference_type;
 
         static pointer allocate(size_t _n_)
         {
@@ -87,6 +88,8 @@ namespace mlib
         typedef const T *const_pointer;
         typedef T &reference;
         typedef const T &const_reference;
+        typedef size_t size_type;
+        typedef std::ptrdiff_t difference_type;
 
         allocator() noexcept {};
         allocator(const allocator<T> &_other_) noexcept {};
@@ -145,6 +148,14 @@ namespace mlib
         };
 
         ~allocator() noexcept {};
+    };
+
+    template <>
+    class allocator<void>
+    {
+        typedef void value_type;
+        typedef void *void_pointer;
+        typedef const void *const_void_pointer;
     };
 
 }

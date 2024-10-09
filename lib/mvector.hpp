@@ -27,7 +27,7 @@
  *  ensure extensibility, separation of algorithms is crucial to this library.
  *
  * @internal module note
- *    To strictly follow a policy-like design, make use of allocator_traits and iterator_traits to enforce their respective algorithms / types respectively.
+ *    To strictly follow an adapter design, make use of allocator_traits and iterator_traits to enforce their respective algorithms / types based on the allocator / iterator respectively.
  *
  */
 
@@ -52,18 +52,18 @@ namespace mlib
    *  T
    *  represents the underlying container's value_type, this is used to forward to an implicit allocator.
    *  @param
-   *  _Alloc
+   *  Alloc
    *  this temp initializes a default allocator if no arguments were given.
    *
    */
 
-  template <typename T, class _Alloc>
+  template <typename T, class Alloc>
   struct vec_base
   {
 
   protected:
-    typedef _Alloc allocator_type;
-    typedef typename allocator_traits<_Alloc>::pointer pointer;
+    typedef Alloc allocator_type;
+    typedef typename allocator_traits<Alloc>::pointer pointer;
     allocator_type m_alloc;
     pointer m_region_start;
     pointer m_region_end;
@@ -78,7 +78,7 @@ namespace mlib
       m_region_capacity = m_region_start + _capacity_;
     }
 
-    vec_base(_Alloc _allocator_, size_t _capacity_)
+    vec_base(Alloc _allocator_, size_t _capacity_)
     {
       this->m_alloc = _allocator_;
       m_region_start = m_alloc;
@@ -110,12 +110,6 @@ namespace mlib
     {
       return ((m_region_capacity - m_region_start + 1) << 1);
     };
-
-  public:
-    typedef mlib::normal_iterator<T *> iterator;
-    typedef mlib::normal_iterator<const T *> const_iterator;
-    typedef mlib::reverse_iterator<T *> reverse_iterator;
-    typedef mlib::reverse_iterator<const T *> const_reverse_iterator;
 
   public:
     inline size_t size() const
@@ -153,6 +147,90 @@ namespace mlib
       m_region_end = m_region_start;
     }
 
+    vec_base(const vec_base &_other_) {
+
+    };
+
+    virtual ~vec_base()
+    {
+      allocator_traits<Alloc>::deallocate(m_region_start);
+    };
+  };
+
+  template <typename T, class Alloc = allocator<T>>
+  class vec : public vec_base<T, Alloc>
+  {
+
+    typedef allocator_traits<Alloc> allocator_traits;
+    typedef allocator_traits::value_type value_type;
+
+  public:
+    typedef typename allocator_traits::pointer pointer;
+    typedef typename allocator_traits::const_pointer const_pointer;
+    typedef typename allocator_traits::const_reference const_reference;
+    typedef typename allocator_traits::reference reference;
+    typedef ptrdiff_t difference_type;
+    typedef size_t size_type;
+
+  public:
+    typedef mlib::normal_iterator<T *> iterator;
+    typedef mlib::normal_iterator<const T *> const_iterator;
+    typedef mlib::reverse_iterator<T *> reverse_iterator;
+    typedef mlib::reverse_iterator<const T *> const_reverse_iterator;
+
+  private:
+  public:
+    vec() : vec_base<T, Alloc>(0) {
+
+            };
+    vec(size_type _n_) : vec_base<T, Alloc>(_n_) {
+
+                         };
+
+    vec(const vec<value_type> &_other_) : vec_base<T, Alloc>(_other_.capacity())
+    {
+      for (size_t i = 0; i < _other_.size(); i++)
+      {
+        push_back(_other_[i]);
+      }
+    }
+
+    vec(vec<value_type> &&_other_) : vec_base<T, Alloc>(_other_.capacity())
+    {
+      this->m_region_start = _other_.m_region_start;
+      this->m_region_end = _other_.m_region_end;
+      this->m_region_capacity = _other_.m_region_capacity;
+
+      _other_.m_region_capacity = nullptr;
+      _other_.m_region_start = nullptr;
+      _other_.m_region_end = nullptr;
+    };
+
+    explicit vec(size_type _n_, const value_type &_v_) : vec_base<T, Alloc>(_n_)
+    {
+
+      for (size_type i = 0; i < _n_; i++)
+      {
+
+        push_back(_v_);
+      }
+    }
+
+    vec &operator=(const vec &_other_)
+    {
+
+      if (this != &_other_)
+      {
+        this->clear();
+        this->_resize_by_offset(_other_.capacity() - this->capacity());
+        for (size_t i = 0; i < _other_.size(); i++)
+        {
+          push_back(_other_[i]);
+        }
+      }
+      return *this;
+    }
+
     iterator begin() const
     {
       return iterator(this->m_region_start);
@@ -182,84 +260,6 @@ namespace mlib
     iterator end() const
     {
       return iterator(this->m_region_end);
-    }
-
-    vec_base(const vec_base &_other_) {
-
-    };
-
-    virtual ~vec_base()
-    {
-      allocator_traits<_Alloc>::deallocate(m_region_start);
-    };
-  };
-
-  template <typename T, class _Alloc = allocator<T>>
-  class vec : public vec_base<T, _Alloc>
-  {
-
-    typedef allocator_traits<_Alloc> allocator_traits;
-    typedef allocator_traits::value_type value_type;
-
-  public:
-    typedef typename allocator_traits::pointer pointer;
-    typedef typename allocator_traits::const_pointer const_pointer;
-    typedef typename allocator_traits::const_reference const_reference;
-    typedef typename allocator_traits::reference reference;
-    typedef ptrdiff_t difference_type;
-    typedef size_t size_type;
-
-  private:
-  public:
-    vec() : vec_base<T, _Alloc>(0) {
-
-            };
-    vec(size_type _n_) : vec_base<T, _Alloc>(_n_) {
-
-                         };
-
-    vec(const vec<value_type> &_other_) : vec_base<T, _Alloc>(_other_.capacity())
-    {
-      for (size_t i = 0; i < _other_.size(); i++)
-      {
-        push_back(_other_[i]);
-      }
-    }
-
-    vec(vec<value_type> &&_other_) : vec_base<T, _Alloc>(_other_.capacity())
-    {
-      this->m_region_start = _other_.m_region_start;
-      this->m_region_end = _other_.m_region_end;
-      this->m_region_capacity = _other_.m_region_capacity;
-
-      _other_.m_region_capacity = nullptr;
-      _other_.m_region_start = nullptr;
-      _other_.m_region_end = nullptr;
-    };
-
-    explicit vec(size_type _n_, const value_type &_v_) : vec_base<T, _Alloc>(_n_)
-    {
-
-      for (size_type i = 0; i < _n_; i++)
-      {
-
-        push_back(_v_);
-      }
-    }
-
-    vec &operator=(const vec &_other_)
-    {
-
-      if (this != &_other_)
-      {
-        this->clear();
-        this->_resize_by_offset(_other_.capacity() - this->capacity());
-        for (size_t i = 0; i < _other_.size(); i++)
-        {
-          push_back(_other_[i]);
-        }
-      }
-      return *this;
     }
     /*
         mlib::vec<int> v{2, 3, 4, 5};
@@ -344,7 +344,7 @@ namespace mlib
       }
     };
 
-    vec(std::initializer_list<value_type> _elems_) : vec_base<T, _Alloc>(_elems_.size())
+    vec(std::initializer_list<value_type> _elems_) : vec_base<T, Alloc>(_elems_.size())
     {
       for (auto it = _elems_.begin(); it != _elems_.end(); it++)
       {
@@ -352,7 +352,7 @@ namespace mlib
       }
     };
 
-    explicit vec(const allocator<value_type> &_alloc_, size_type _n_) : vec_base<T, _Alloc>(_alloc_, _n_) {
+    explicit vec(const allocator<value_type> &_alloc_, size_type _n_) : vec_base<T, Alloc>(_alloc_, _n_) {
 
                                                                         };
 
