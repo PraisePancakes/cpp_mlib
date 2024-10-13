@@ -7,10 +7,10 @@
 /*TO DO FIX ITERATOR_TRAITS*/
 int main()
 {
-  mlib::vec<int> s({1, 2, 3, 4, 5});
+  mlib::vec<int> s({0, 1, 2, 3});
 
-  mlib::vec<int> sp = s.slice(0, 2);
-  std::cout << sp.size();
-  sp.print();
+  s.splice(0, 1, {1, 2, 3});
+
+  s.print();
   return 0;
 }

@@ -273,18 +273,20 @@ namespace mlib
       {
         push_back(_v_);
       }
-
-      size_type si = _i_;
-      size_type e = this->size();
-
-      while (e > si)
+      else
       {
-        *(this->m_region_start + e) = *(this->m_region_start + (e - 1));
-        e--;
-      }
+        size_type si = _i_;
+        size_type e = this->size();
 
-      *(this->m_region_start + e) = _v_;
-      this->m_region_end++;
+        while (e > si)
+        {
+          *(this->m_region_start + e) = *(this->m_region_start + (e - 1));
+          e--;
+        }
+
+        *(this->m_region_start + e) = _v_;
+        this->m_region_end++;
+      }
     };
 
     void splice(size_type _s_, size_type _n_deletes_, std::initializer_list<value_type> _elems_)

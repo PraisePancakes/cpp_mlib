@@ -19,6 +19,7 @@ namespace mlib
     public:
         typedef char char_type;
         typedef int int_type;
+        typedef const char_type &const_reference;
 
         typedef std::ptrdiff_t difference_type;
         typedef std::size_t size_type;
@@ -238,6 +239,31 @@ namespace mlib
     {
 
         typedef CTraits _traits;
+        size_t _calculate_amortized_growth()
+        {
+            return ((this->m_region_capacity - this->m_region_start + 1) << 1);
+        };
+
+        void _resize_by_offset(const size_t _capacity_size_offset_)
+        {
+            size_t current_size = this->m_region_end - this->m_region_start;
+
+            size_t current_capacity = this->m_region_capacity - this->m_region_start;
+            size_t new_capacity = current_capacity + _capacity_size_offset_;
+            typename Alloc::pointer new_start = this->m_allocator.reallocate(this->m_region_start, new_capacity);
+
+            if (!new_start)
+            {
+                throw std::bad_alloc();
+            }
+
+            if (new_start != this->m_region_start)
+            {
+                this->m_region_start = new_start;
+                this->m_region_end = new_start + current_size;
+                this->m_region_capacity = new_start + new_capacity;
+            }
+        }
 
     public:
         basic_string() : str_base<T, CTraits, Alloc>("", 0) {
@@ -260,6 +286,61 @@ namespace mlib
         };
 
         basic_string(const _traits::size_type _size_) : str_base<T, CTraits, Alloc>("", _size_) {};
+
+        void push_back(typename Alloc::const_reference _v_)
+        {
+
+            if (this->size() >= this->capacity())
+            {
+
+                this->_resize_by_offset(this->_calculate_amortized_growth());
+            }
+
+            std::ptrdiff_t size = this->m_region_end - this->m_region_start;
+
+            this->m_allocator.construct(this->m_region_start + size, _v_);
+
+            ++this->m_region_end;
+
+            *(this->m_region_end) = '\0';
+        }
+
+        void push_back(typename Alloc::reference &_v_)
+        {
+            if (this->size() >= this->capacity())
+            {
+
+                this->_resize_by_offset(this->_calculate_amortized_growth());
+            }
+
+            this->m_allocator.construct(this->m_region_start + this->size(), _v_);
+            this->m_region_end++;
+        }
+
+        void insert(typename _traits::size_type _i_, typename _traits::const_reference _v_)
+        {
+
+            if (_i_ >= this->size())
+            {
+
+                push_back(_v_);
+            }
+            else
+            {
+                typename _traits::size_type si = _i_;
+                typename _traits::size_type e = this->size() + 1;
+
+                while (e > si)
+                {
+
+                    *(this->m_region_start + e) = *(this->m_region_start + (e - 1));
+                    e--;
+                }
+
+                *(this->m_region_start + e) = _v_;
+                this->m_region_end++;
+            }
+        };
 
         void reverse()
         {
@@ -303,6 +384,66 @@ namespace mlib
                 const typename _traits::char_type temp = this->m_region_start[i];
                 this->m_region_start[i] = this->m_region_start[j];
                 this->m_region_start[j] = temp;
+            }
+        };
+
+        void splice(typename _traits::size_type _s_, typename _traits::size_type _n_deletes_, std::initializer_list<typename _traits::char_type> _elems_)
+        {
+            const typename _traits::size_type start = _s_;
+            typename _traits::size_type span = _n_deletes_;
+
+            if (span > _elems_.size())
+            {
+                typename _traits::size_type i = start;
+                for (typename _traits::size_type index = 0; index < _elems_.size(); index++)
+                {
+                    *(this->m_region_start + i) = _elems_.begin()[index];
+                    i++;
+                }
+
+                typename _traits::size_type _n_lshift = span - _elems_.size();
+
+                i = start + _elems_.size();
+
+                for (typename _traits::size_type iter = 0; iter < _n_lshift; iter++)
+                {
+                    for (typename _traits::size_type j = start + _elems_.size(); j < this->size(); j++)
+                    {
+
+                        this->m_region_start[j] = this->m_region_start[j + 1];
+                    }
+
+                    this->m_region_end--;
+                }
+            }
+            else if (span < _elems_.size())
+            {
+
+                typename _traits::size_type list_cursor = 0;
+                typename _traits::size_type i = start;
+
+                for (; i < start + span; ++i)
+                {
+
+                    this->m_region_start[i] = _elems_.begin()[list_cursor];
+                    list_cursor++;
+                }
+
+                for (typename _traits::size_type j = i; j < start + _elems_.size(); j++)
+                {
+
+                    insert(j, _elems_.begin()[list_cursor]);
+                    list_cursor++;
+                }
+            }
+            else if (span == _elems_.size())
+            {
+                typename _traits::size_type list_cursor = 0;
+                for (typename _traits::size_type i = start; i < start + span; ++i)
+                {
+                    this->m_region_start[i] = _elems_.begin()[list_cursor];
+                    list_cursor++;
+                }
             }
         };
 
