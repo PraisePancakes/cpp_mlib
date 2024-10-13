@@ -371,7 +371,7 @@ namespace mlib
         template <typename _B, typename _D>
         auto test_is_base_of(int) -> decltype(test_ptr_conv<_B>(static_cast<_D *>(nullptr)));
 
-        // check fallback base conversion
+        // check SFINAE base conversion
         template <typename, typename>
         auto test_is_base_of(...) -> true_type;
     };

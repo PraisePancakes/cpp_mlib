@@ -4,13 +4,13 @@
 #include "lib/mvector.hpp"
 #include "lib/mtest.hpp"
 
+/*TO DO FIX ITERATOR_TRAITS*/
 int main()
 {
+  mlib::vec<int> s({1, 2, 3, 4, 5});
 
-  static_assert(mlib::char_traits<char>::gt('b', 'a') == true);
-  static_assert(mlib::char_traits<char>::lt('a', 'b') == true);
-  static_assert(mlib::char_traits<char>::lt('b', 'a') == false);
-  static_assert(mlib::char_traits<char>::gt('a', 'b') == false);
-
+  mlib::vec<int> sp = s.slice(0, 2);
+  std::cout << sp.size();
+  sp.print();
   return 0;
 }

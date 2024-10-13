@@ -527,7 +527,7 @@ namespace mlib
 
       for (size_type i = __start__; i < __end__; i++)
       {
-        this->m_alloc.construct(v.m_region_start + v.size(), *(this->m_region_start + i));
+        this->m_alloc.construct(v.m_region_start + i, *(this->m_region_start + i));
         v.m_region_end++;
       }
 

@@ -157,6 +157,7 @@ namespace mlib
 
         str_base(const_pointer _src_, size_type _size_)
         {
+
             if (_size_ < _SSO_DEOPTIMIZER_THRESHOLD)
             {
                 _init_impl(f_impl.sso_buff, _src_, _size_, _SSO_DEOPTIMIZER_THRESHOLD);
@@ -258,7 +259,84 @@ namespace mlib
             return *this;
         };
 
-        basic_string(const size_t _size_) : str_base<T, CTraits, Alloc>("", _size_) {};
+        basic_string(const _traits::size_type _size_) : str_base<T, CTraits, Alloc>("", _size_) {};
+
+        void reverse()
+        {
+            if (this->size() == 0)
+                return;
+
+            if (this->size() == 1)
+                return;
+
+            typename _traits::size_type j = this->size() - 1;
+            for (typename _traits::size_type i = 0; i < j; i++)
+            {
+                const typename _traits::char_type temp = this->m_region_start[i];
+                this->m_region_start[i] = this->m_region_start[j];
+                this->m_region_start[j] = temp;
+                j--;
+            }
+        };
+
+        void reverse(typename _traits::size_type _start_, typename _traits::size_type _end_)
+        {
+            // reverse from start to end.
+            if (this->size() == 0)
+                return;
+
+            if (this->size() == 1)
+                return;
+
+            const typename _traits::size_type temp_start = _start_;
+            const typename _traits::size_type temp_end = _end_;
+
+            if (_start_ > _end_)
+            {
+                _start_ = temp_end;
+                _end_ = temp_start;
+            }
+
+            typename _traits::size_type j = _end_;
+            for (typename _traits::size_type i = _start_; i < j; i++, j--)
+            {
+                const typename _traits::char_type temp = this->m_region_start[i];
+                this->m_region_start[i] = this->m_region_start[j];
+                this->m_region_start[j] = temp;
+            }
+        };
+
+        mlib::basic_string<typename _traits::char_type> slice(typename _traits::size_type __start__, typename _traits::size_type __end__)
+        {
+            const int temp_start = __start__;
+            const int temp_end = __end__;
+
+            if (__start__ < 0)
+            {
+                __start__ = 0;
+            }
+
+            if (__end__ >= this->size())
+            {
+                __end__ = this->size();
+            }
+
+            if (__start__ > __end__)
+            {
+                __end__ = temp_start;
+                __start__ = temp_end;
+            }
+
+            mlib::basic_string<typename _traits::char_type> s(__end__ - __start__);
+            std::cout << s.capacity() << std::endl;
+            for (typename _traits::size_type i = __start__; i < __end__; i++)
+            {
+                this->m_allocator.construct(s.m_region_start + i, *(this->m_region_start + i));
+                s.m_region_end++;
+            }
+
+            return s;
+        }
 
         T &operator[](size_t _index_) const
         {
