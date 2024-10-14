@@ -2,14 +2,12 @@
 #include <cstring>
 #include "lib/mstring.hpp"
 #include "lib/mvector.hpp"
-#include "lib/mtest.hpp"
 #include "lib/mdeque.hpp"
+#include "tests/mvector/vector_push.cpp"
 
 int main()
 {
-  mlib::vec<int> v({5, 3, 1, 2, 7});
-  v.sort();
+  TEST_VECTOR();
 
-  v.print();
   return 0;
 }

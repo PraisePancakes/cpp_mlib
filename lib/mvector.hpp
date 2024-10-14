@@ -514,6 +514,19 @@ namespace mlib
 
                                                                         };
 
+    bool operator==(const mlib::vec<value_type> &_other_)
+    {
+      if (this->size() < _other_.size())
+        return false;
+      for (size_type i = 0; i < _other_.size(); i++)
+      {
+        if (*(this->m_region_start + i) != _other_[i])
+          return false;
+      }
+
+      return true;
+    };
+
     reference operator[](size_type _ptr_index_) const
     {
       return *(this->m_region_start + _ptr_index_);
