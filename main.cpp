@@ -7,7 +7,14 @@
 
 int main()
 {
-  TEST_VECTOR();
+  if (TEST_VECTOR())
+  {
+    std::cout << "vec::push_back passed all cases" << std::endl;
+  }
+  else
+  {
+    std::cout << "vec::push_back failed a case" << std::endl;
+  };
 
   return 0;
 }

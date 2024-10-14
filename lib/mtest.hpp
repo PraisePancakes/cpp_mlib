@@ -67,12 +67,15 @@ namespace mlib
             cases.push_back(to_do);
         };
 
-        void run_tests() const
+        bool run_tests() const
         {
             for (size_t i = 0; i < cases.size(); i++)
             {
-                cases[i]->test_operation();
+                if (!cases[i]->test_operation())
+                    return false;
             }
+
+            return true;
         };
 
         ~mtester() {
