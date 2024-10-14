@@ -37,6 +37,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 
+
 target_include_directories(${PROJECT_NAME} PRIVATE .)
 
 install(TARGETS ${PROJECT_NAME}

@@ -29,25 +29,14 @@ namespace mlib
     {
     };
 
-    template <typename Iterator, class = void>
-    struct init_iterator_traits
+    template <typename Iter>
+    struct iterator_traits
     {
-    };
-
-    template <typename T>
-    struct init_iterator_traits<T>
-    {
-        typedef random_access_iterator_tag iterator_category;
-        typedef T value_type;
-        typedef T *pointer;
-        typedef T &reference;
-        typedef size_t size_type;
-        typedef std::ptrdiff_t difference_type;
-    };
-
-    template <typename T>
-    struct iterator_traits : init_iterator_traits<T>
-    {
+        typedef Iter::difference_type difference_type;
+        typedef Iter::value_type value_type;
+        typedef Iter::pointer pointer;
+        typedef Iter::reference reference;
+        typedef Iter::category category;
     };
 
     template <typename T>
@@ -81,7 +70,7 @@ namespace mlib
     public:
         typedef iterator_traits<Iterator> iter_traits;
         typedef random_access_iterator_tag iterator_category;
-        iter_traits::pointer _pit;
+        Iterator _pit;
 
         normal_iterator() : _pit() {};
         normal_iterator(iter_traits::pointer _loc_) : _pit(_loc_) {};
@@ -124,13 +113,13 @@ namespace mlib
         };
     };
 
-    template <typename T>
+    template <typename Iterator>
     class reverse_iterator
     {
 
     public:
-        typedef iterator_traits<T> iter_traits;
-        iter_traits::pointer _pit;
+        typedef iterator_traits<Iterator> iter_traits;
+        Iterator _pit;
 
         typedef typename iter_traits::difference_type difference_type;
         reverse_iterator() : _pit() {};
@@ -157,7 +146,7 @@ namespace mlib
             return *this->_pit;
         }
 
-        reverse_iterator &operator=(const reverse_iterator<T> &_other_)
+        reverse_iterator &operator=(const reverse_iterator<Iterator> &_other_)
         {
             this->_pit = _other_._pit;
         };

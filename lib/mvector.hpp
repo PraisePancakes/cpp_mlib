@@ -179,6 +179,135 @@ namespace mlib
     typedef mlib::reverse_iterator<const T *> const_reverse_iterator;
 
   private:
+    struct ISpliceStrategy
+    {
+      ISpliceStrategy() {};
+      virtual void splice(pointer &_mem_s_, pointer &_mem_e_, size_type _s_index_, size_type _span_, const std::initializer_list<value_type> &_elems_) = 0;
+      ~ISpliceStrategy() {};
+    };
+
+    struct SpanGreater : public ISpliceStrategy
+    {
+      SpanGreater() {};
+      void splice(pointer &_mem_s_,
+                  pointer &_mem_e_,
+                  size_type _s_index_,
+                  size_type _span_,
+                  const std::initializer_list<value_type> &_elems_) override
+      {
+
+        size_type i = _s_index_;
+        for (size_type index = 0; index < _elems_.size(); index++)
+        {
+          *(_mem_s_ + i) = _elems_.begin()[index];
+          i++;
+        }
+
+        size_type _n_lshift = _span_ - _elems_.size();
+
+        i = _s_index_ + _elems_.size();
+
+        for (size_type iter = 0; iter < _n_lshift; iter++)
+        {
+          for (size_type j = _s_index_ + _elems_.size(); j < _mem_e_ - _mem_s_; j++)
+          {
+            _mem_s_[j] = _mem_s_[j + 1];
+          }
+
+          _mem_e_--;
+        }
+      };
+      ~SpanGreater() {};
+    };
+
+    struct SpanLess : public ISpliceStrategy
+    {
+      SpanLess() {};
+      void splice(pointer &_mem_s_,
+                  pointer &_mem_e_,
+                  size_type _s_index_,
+                  size_type _span_,
+                  const std::initializer_list<value_type> &_elems_) override
+      {
+
+        size_type list_cursor = 0;
+        size_type i = _s_index_;
+        for (; i < _s_index_ + _span_; ++i)
+        {
+          _mem_s_[i] = _elems_.begin()[list_cursor];
+          list_cursor++;
+        }
+        /*
+      void insert(size_type _i_, const_reference _v_)
+      {
+        size_type si = _i_;
+        size_type e = this->m_region_end - this->m_region_start;
+
+        while (e > si)
+        {
+          *(this->m_region_start + e) = *(this->m_region_start + (e - 1));
+          e--;
+        }
+
+        *(this->m_region_start + e) = _v_;
+        this->m_region_end++;
+      };
+        */
+
+        for (size_type j = i; j < _s_index_ + _elems_.size(); j++)
+        {
+          size_type si = j;
+          size_type e = _mem_e_ - _mem_s_;
+
+          while (e > si)
+          {
+            *(_mem_s_ + e) = *(_mem_s_ + (e - 1));
+            e--;
+          }
+
+          *(_mem_s_ + e) = _elems_.begin()[list_cursor++];
+          _mem_e_++;
+        }
+      };
+      ~SpanLess() {};
+    };
+
+    struct SpanEquals : public ISpliceStrategy
+    {
+
+      SpanEquals() {};
+      void splice(pointer &_mem_s_,
+                  pointer &_mem_e_,
+                  size_type _s_index_,
+                  size_type _span_,
+                  const std::initializer_list<value_type> &_elems_) override
+      {
+        size_type list_cursor = 0;
+        for (size_type i = _s_index_; i < _s_index_ + _span_; ++i)
+        {
+          _mem_s_[i] = _elems_.begin()[list_cursor];
+          list_cursor++;
+        }
+      };
+      ~SpanEquals() {};
+    };
+
+    template <typename Strategy, typename = std::enable_if_t<mlib::is_base_of<ISpliceStrategy, Strategy>::value>>
+    struct SpliceStrategyAdapter
+    {
+      Strategy s;
+      SpliceStrategyAdapter() {};
+      void execute(pointer &_mem_s_,
+                   pointer &_mem_e_,
+                   size_type _s_index_,
+                   size_type _span_,
+                   const std::initializer_list<value_type> &_elems_)
+      {
+        s.splice(_mem_s_, _mem_e_, _s_index_, _span_, _elems_);
+      };
+      ~SpliceStrategyAdapter() {};
+    };
+
   public:
     vec() : vec_base<T, Alloc>(0) {
 
@@ -269,80 +398,36 @@ namespace mlib
     */
     void insert(size_type _i_, const_reference _v_)
     {
-      if (_i_ >= this->size())
-      {
-        push_back(_v_);
-      }
-      else
-      {
-        size_type si = _i_;
-        size_type e = this->size();
+      size_type si = _i_;
+      size_type e = this->m_region_end - this->m_region_start;
 
-        while (e > si)
-        {
-          *(this->m_region_start + e) = *(this->m_region_start + (e - 1));
-          e--;
-        }
-
-        *(this->m_region_start + e) = _v_;
-        this->m_region_end++;
+      while (e > si)
+      {
+        *(this->m_region_start + e) = *(this->m_region_start + (e - 1));
+        e--;
       }
+
+      *(this->m_region_start + e) = _v_;
+      this->m_region_end++;
     };
 
-    void splice(size_type _s_, size_type _n_deletes_, std::initializer_list<value_type> _elems_)
+    void splice(size_type _s_, size_type _span_, std::initializer_list<value_type> _elems_)
     {
-      const size_type start = _s_;
-      size_type span = _n_deletes_;
 
-      if (span > _elems_.size())
+      if (_span_ > _elems_.size())
       {
-        size_type i = start;
-        for (size_type index = 0; index < _elems_.size(); index++)
-        {
-          *(this->m_region_start + i) = _elems_.begin()[index];
-          i++;
-        }
-
-        size_type _n_lshift = span - _elems_.size();
-
-        i = start + _elems_.size();
-
-        for (size_type iter = 0; iter < _n_lshift; iter++)
-        {
-          for (size_type j = start + _elems_.size(); j < this->size(); j++)
-          {
-
-            this->m_region_start[j] = this->m_region_start[j + 1];
-          }
-
-          this->m_region_end--;
-        }
+        SpliceStrategyAdapter<SpanGreater> s;
+        s.execute(this->m_region_start, this->m_region_end, _s_, _span_, _elems_);
       }
-      else if (span < _elems_.size())
+      else if (_span_ < _elems_.size())
       {
-
-        size_type list_cursor = 0;
-        size_type i = start;
-        for (; i < start + span; ++i)
-        {
-          this->m_region_start[i] = _elems_.begin()[list_cursor];
-          list_cursor++;
-        }
-
-        for (size_type j = i; j < start + _elems_.size(); j++)
-        {
-
-          insert(j, _elems_.begin()[list_cursor++]);
-        }
+        SpliceStrategyAdapter<SpanLess> s;
+        s.execute(this->m_region_start, this->m_region_end, _s_, _span_, _elems_);
       }
-      else if (span == _elems_.size())
+      else if (_span_ == _elems_.size())
       {
-        size_type list_cursor = 0;
-        for (size_type i = start; i < start + span; ++i)
-        {
-          this->m_region_start[i] = _elems_.begin()[list_cursor];
-          list_cursor++;
-        }
+        SpliceStrategyAdapter<SpanEquals> s;
+        s.execute(this->m_region_start, this->m_region_end, _s_, _span_, _elems_);
       }
     };
 
