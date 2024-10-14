@@ -7,8 +7,8 @@
 
 int main()
 {
-  mlib::vec<int> v({0, 1, 2, 3, 4, 5});
-  v.splice(0, 2, {7, 8});
+  mlib::vec<int> v({5, 3, 1, 2, 7});
+  v.sort();
 
   v.print();
   return 0;
