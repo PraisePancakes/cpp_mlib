@@ -10,7 +10,6 @@ namespace mlib
 
     public:
         using value_type = allocator_traits::value_type;
-        using pointer = allocator_traits::pointer;
         using reference = allocator_traits::reference;
         using const_reference = allocator_traits::const_reference;
         using size_type = allocator_traits::size_type;
@@ -37,7 +36,7 @@ namespace mlib
         dllist(dllist &&_other_) {
         };
 
-        void append_back(value_type v)
+        void append_back(const_reference v)
         {
             if (!_head_)
             {
@@ -58,7 +57,7 @@ namespace mlib
             ++_sz_;
         };
 
-        void append_front(value_type v)
+        void append_front(const_reference v)
         {
             if (_head_ == nullptr)
             {
