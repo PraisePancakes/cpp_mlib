@@ -37,7 +37,7 @@ namespace mlib
         dllist(dllist &&_other_) {
         };
 
-        void append(value_type v)
+        void append_back(value_type v)
         {
             if (!_head_)
             {
@@ -58,7 +58,52 @@ namespace mlib
             ++_sz_;
         };
 
-        reference operator[](size_type _index_)
+        void append_front(value_type v)
+        {
+            if (_head_ == nullptr)
+            {
+                _head_ = new _dllnode_(v);
+            }
+            else
+            {
+                _dllnode_ *temp = new _dllnode_(v);
+                temp->_next_ = _head_;
+                _head_->_prev_ = temp;
+                _head_ = _head_->_prev_;
+            };
+            _sz_++;
+        };
+
+        void pop_front()
+        {
+            if (_head_ == nullptr)
+                return;
+
+            _dllnode_ *temp = _head_;
+            _head_ = _head_->_next_;
+            delete temp;
+            _head_->_prev_ = nullptr;
+            _sz_--;
+        };
+
+        void pop_back()
+        {
+            if (_head_ == nullptr)
+                return;
+
+            _dllnode_ *temp = _head_;
+
+            while (temp->_next_->_next_)
+            {
+                temp = temp->_next_;
+            }
+
+            temp->_next_ = nullptr;
+            _sz_--;
+        };
+
+        reference
+        operator[](size_type _index_)
         {
             size_type counter = 0;
             _dllnode_ *temp = _head_;
