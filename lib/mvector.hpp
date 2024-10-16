@@ -516,6 +516,7 @@ namespace mlib
 
     bool operator==(const mlib::vec<value_type> &_other_)
     {
+
       if (this->size() < _other_.size())
         return false;
       for (size_type i = 0; i < _other_.size(); i++)

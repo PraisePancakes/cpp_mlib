@@ -1,14 +1,14 @@
 #pragma once
 #include "mallocator.hpp"
+#include "mvector.hpp"
 #include <deque>
 
 namespace mlib
 {
     template <typename T, typename Alloc = mlib::allocator<T>>
-    class Deque
+    class deque
     {
         using allocator_traits = mlib::allocator_traits<Alloc>;
-        std::deque<int> dq;
 
     public:
         using allocator_type = Alloc;
@@ -19,9 +19,19 @@ namespace mlib
         using const_pointer = typename allocator_traits::const_pointer;
         using reference = T &;
         using const_reference = const T &;
+        
+    private:
+    public:
+        /*
+            pop_front
+            pop_back
+            push_front
+            push_back
+        */
 
-        Deque() {};
-        ~Deque() {};
+        deque() {};
+
+        ~deque() {};
     };
 
 }
