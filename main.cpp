@@ -23,11 +23,8 @@ int main()
   l.append_back(8);
   l.append_back(9);
   l.append_back(10);
-  l.pop_back();
   l.append_back(20);
   l.append_back(50);
-  l.pop_front();
-  l.append_front(1);
 
   for (size_t i = 0; i < l.size(); i++)
   {
