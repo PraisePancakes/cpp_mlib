@@ -3,6 +3,7 @@
 #include "lib/mstring.hpp"
 #include "lib/mvector.hpp"
 #include "lib/mdllist.hpp"
+#include "lib/mdeque.hpp"
 #include "tests/mvector/vector_push.cpp"
 
 int main()
@@ -16,19 +17,5 @@ int main()
     std::cout << "vec::push_back failed a case" << std::endl;
   };
 
-  mlib::dllist<int> l;
-
-  l.append_back(5);
-  l.append_back(7);
-  l.append_back(8);
-  l.append_back(9);
-  l.append_back(10);
-  l.append_back(20);
-  l.append_back(50);
-
-  for (size_t i = 0; i < l.size(); i++)
-  {
-    std::cout << l[i] << std::endl;
-  }
   return 0;
 }

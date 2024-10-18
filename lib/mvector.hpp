@@ -133,6 +133,15 @@ namespace mlib
       m_region_capacity = m_region_start + _capacity_;
     };
 
+    void resize(size_t _capacity_, const T &_v_)
+    {
+      reserve(_capacity_);
+      for (size_t i = 0; i < _capacity_; i++)
+      {
+        *(this->m_region_start + i) = _v_;
+      }
+    };
+
     void
     clear()
     {

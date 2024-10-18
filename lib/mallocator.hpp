@@ -19,6 +19,7 @@ namespace mlib
 
         static pointer allocate(size_t _n_)
         {
+
             pointer alloc_block = (pointer)malloc(_n_ * sizeof(value_type));
             if (!alloc_block)
             {

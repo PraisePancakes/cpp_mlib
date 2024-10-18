@@ -108,6 +108,7 @@ namespace mlib
         reference
         operator[](size_type _index_)
         {
+
             bool in_right_half = _locate_which_partition(_index_);
 
             if (in_right_half)
