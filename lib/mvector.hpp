@@ -139,6 +139,7 @@ namespace mlib
       for (size_t i = 0; i < _capacity_; i++)
       {
         *(this->m_region_start + i) = _v_;
+        m_region_end++;
       }
     };
 

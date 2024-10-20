@@ -36,7 +36,7 @@ namespace mlib
 
         void _initialize_chunk_map()
         {
-            chunk_map.resize(DQ_INITIAL_MAP_SIZE, nullptr);
+            chunk_map.reserve(DQ_INITIAL_MAP_SIZE);
             chunk_map.push_back(allocator_traits::allocate(m_chunk_capacity));
             m_start = m_chunk_capacity / 2;
             m_finish = m_start;
@@ -72,7 +72,7 @@ namespace mlib
         {
             if (m_start == 0)
             {
-                chunk_map.insert(0, new allocator_traits::allocate(m_chunk_capacity));
+                chunk_map.insert(0, allocator_traits::allocate(m_chunk_capacity));
                 m_start = m_chunk_capacity - 1;
             }
             m_size++;
