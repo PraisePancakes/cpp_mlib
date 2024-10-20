@@ -23,10 +23,13 @@ int main()
   d.push_back(2);
   d.push_back(3);
 
-  for (size_t i = 0; i < 3; i++)
+  d.push_back(5);
+
+  for (size_t i = 0; i < d.size(); i++)
   {
     std::cout << d[i];
   }
+  // {1 ,0, 1, 2, 3, 5}
 
   return 0;
 }

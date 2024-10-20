@@ -9,13 +9,13 @@ namespace mlib
     {
 
         typedef Alloc allocator_type;
-        typedef Alloc::pointer pointer;
-        typedef Alloc::const_pointer const_pointer;
-        typedef Alloc::value_type value_type;
-        typedef Alloc::reference reference;
-        typedef Alloc::const_reference const_reference;
-        typedef Alloc::size_type size_type;
-        typedef Alloc::difference_type difference_type;
+        typedef typename Alloc::pointer pointer;
+        typedef typename Alloc::const_pointer const_pointer;
+        typedef typename Alloc::value_type value_type;
+        typedef typename Alloc::reference reference;
+        typedef typename Alloc::const_reference const_reference;
+        typedef typename Alloc::size_type size_type;
+        typedef typename Alloc::difference_type difference_type;
 
         static pointer allocate(size_t _n_)
         {
@@ -138,7 +138,7 @@ namespace mlib
             _loc_->~value_type();
         }
 
-        void deallocate(pointer _region_)
+        void deallocate(pointer _region_, size_type _n_)
         {
             free(_region_);
         };
@@ -147,6 +147,9 @@ namespace mlib
         {
             return &_ref_;
         };
+
+        friend bool operator==(const allocator &, const allocator &) { return true; }
+        friend bool operator!=(const allocator &, const allocator &) { return false; }
 
         ~allocator() noexcept {};
     };

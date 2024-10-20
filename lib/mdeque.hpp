@@ -29,29 +29,20 @@ namespace mlib
         };
 
     private:
-        struct _chunk
-        {
-            pointer block;
-
-            _chunk() : block(nullptr) {};
-            _chunk(pointer _block_loc_) : block(_block_loc_) {};
-
-            ~_chunk() {};
-        };
-
         inline static size_type m_chunk_capacity = _S_dq_chunk_capacity(sizeof(value_type));
         size_type m_start;
         size_type m_finish;
+        size_type m_size = 0;
 
         void _initialize_chunk_map()
         {
             chunk_map.resize(DQ_INITIAL_MAP_SIZE, nullptr);
-            chunk_map.push_back(new _chunk(allocator_traits::allocate(m_chunk_capacity)));
+            chunk_map.push_back(allocator_traits::allocate(m_chunk_capacity));
             m_start = m_chunk_capacity / 2;
             m_finish = m_start;
         };
 
-        mlib::vec<_chunk *> chunk_map;
+        mlib::vec<pointer> chunk_map;
 
     public:
         /*
@@ -61,7 +52,7 @@ namespace mlib
             push_back
         */
 
-        deque()
+        deque() : m_start(0), m_finish(0), m_size(0)
         {
             _initialize_chunk_map();
         };
@@ -70,11 +61,27 @@ namespace mlib
         {
             if (m_finish == m_chunk_capacity)
             {
-                chunk_map.push_back(new _chunk(allocator_traits::allocate(m_chunk_capacity)));
+                chunk_map.push_back(allocator_traits::allocate(m_chunk_capacity));
                 m_finish = 0;
             }
+            m_size++;
+            chunk_map[chunk_map.size() - 1][m_finish++] = _v_;
+        };
 
-            chunk_map[chunk_map.size() - 1]->block[m_finish++] = _v_;
+        void push_front(const_reference _v_)
+        {
+            if (m_start == 0)
+            {
+                chunk_map.insert(0, new allocator_traits::allocate(m_chunk_capacity));
+                m_start = m_chunk_capacity - 1;
+            }
+            m_size++;
+            chunk_map[0][--m_start] = _v_;
+        };
+
+        [[nodiscard]] inline size_type size() const noexcept
+        {
+            return m_size;
         };
 
         reference operator[](const size_type _index_)
@@ -82,7 +89,7 @@ namespace mlib
             const size_type block_idx = (m_start + _index_) / m_chunk_capacity;
             const size_type offset = (m_start + _index_) % m_chunk_capacity;
 
-            return chunk_map[block_idx]->block[offset];
+            return chunk_map[block_idx][offset];
         };
 
         ~deque() {};
