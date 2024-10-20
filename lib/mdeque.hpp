@@ -68,6 +68,18 @@ namespace mlib
             chunk_map[chunk_map.size() - 1][m_finish++] = _v_;
         };
 
+        void pop_back()
+        {
+            allocator_traits::destroy(&chunk_map[chunk_map.size() - 1][m_finish--]);
+            m_size--;
+        };
+
+        void pop_front()
+        {
+            allocator_traits::destroy(&chunk_map[0][m_start++]);
+            m_size--;
+        };
+
         void push_front(const_reference _v_)
         {
             if (m_start == 0)
@@ -94,5 +106,4 @@ namespace mlib
 
         ~deque() {};
     };
-
 }
