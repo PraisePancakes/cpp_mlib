@@ -17,5 +17,16 @@ int main()
     std::cout << "vec::push_back failed a case" << std::endl;
   };
 
+  mlib::deque<int> d;
+
+  d.push_back(1);
+  d.push_back(2);
+  d.push_back(3);
+
+  for (size_t i = 0; i < 3; i++)
+  {
+    std::cout << d[i];
+  }
+
   return 0;
 }

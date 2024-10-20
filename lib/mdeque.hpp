@@ -23,39 +23,35 @@ namespace mlib
         using reference = typename allocator_traits::reference;
         using const_reference = typename allocator_traits::const_reference;
 
-    private:
-        void _initialize_chunk_map(size_type _type_size_)
-        {
-            chunk_map.resize(DQ_INITIAL_MAP_SIZE, nullptr);
-            chunk_map.push_back(new _chunk(allocate_fixed_size_chunk(_type_size_)));
-        };
-
-        [[nodiscard]] inline static size_type _dq_chunk_capacity(const size_type _type_size_)
+        [[nodiscard]] inline static size_type _S_dq_chunk_capacity(const size_type _type_size_)
         {
             return _type_size_ < DQ_CHUNK_BYTE_SIZE ? size_type(DQ_CHUNK_BYTE_SIZE / _type_size_) : size_type(1);
         };
 
+    private:
         struct _chunk
         {
             pointer block;
-            size_type current_size;
 
-            _chunk() : block(nullptr), current_size(0) {};
-            _chunk(pointer _block_loc_) : block(_block_loc_), current_size(0) {};
+            _chunk() : block(nullptr) {};
+            _chunk(pointer _block_loc_) : block(_block_loc_) {};
+
             ~_chunk() {};
-
-            [[nodiscard]] inline bool is_filled()
-            {
-                return current_size >= _dq_chunk_capacity(sizeof(value_type));
-            };
         };
 
-        mlib::vec<_chunk> chunk_map;
+        inline static size_type m_chunk_capacity = _S_dq_chunk_capacity(sizeof(value_type));
+        size_type m_start;
+        size_type m_finish;
 
-        pointer allocate_fixed_size_chunk(size_type _type_size_)
+        void _initialize_chunk_map()
         {
-            return allocator_traits::allocate(_dq_chunk_capacity(_type_size_) / _type_size_);
+            chunk_map.resize(DQ_INITIAL_MAP_SIZE, nullptr);
+            chunk_map.push_back(new _chunk(allocator_traits::allocate(m_chunk_capacity)));
+            m_start = m_chunk_capacity / 2;
+            m_finish = m_start;
         };
+
+        mlib::vec<_chunk *> chunk_map;
 
     public:
         /*
@@ -67,11 +63,26 @@ namespace mlib
 
         deque()
         {
-            _initialize_chunk_map(sizeof(value_type));
+            _initialize_chunk_map();
         };
 
-        void push_back(const_reference _v_) {
+        void push_back(const_reference _v_)
+        {
+            if (m_finish == m_chunk_capacity)
+            {
+                chunk_map.push_back(new _chunk(allocator_traits::allocate(m_chunk_capacity)));
+                m_finish = 0;
+            }
 
+            chunk_map[chunk_map.size() - 1]->block[m_finish++] = _v_;
+        };
+
+        reference operator[](const size_type _index_)
+        {
+            const size_type block_idx = (m_start + _index_) / m_chunk_capacity;
+            const size_type offset = (m_start + _index_) % m_chunk_capacity;
+
+            return chunk_map[block_idx]->block[offset];
         };
 
         ~deque() {};
