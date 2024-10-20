@@ -65,7 +65,8 @@ namespace mlib
                 m_finish = 0;
             }
             m_size++;
-            chunk_map[chunk_map.size() - 1][m_finish++] = _v_;
+
+            allocator_traits::construct(&(chunk_map[chunk_map.size() - 1][m_finish++]), _v_);
         };
 
         void pop_back()
@@ -85,10 +86,10 @@ namespace mlib
             if (m_start == 0)
             {
                 chunk_map.insert(0, allocator_traits::allocate(m_chunk_capacity));
-                m_start = m_chunk_capacity - 1;
+                m_start = m_chunk_capacity;
             }
             m_size++;
-            chunk_map[0][--m_start] = _v_;
+            allocator_traits::construct(&(chunk_map[0][--m_start]), _v_);
         };
 
         [[nodiscard]] inline size_type size() const noexcept
