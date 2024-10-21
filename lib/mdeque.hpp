@@ -92,6 +92,22 @@ namespace mlib
             allocator_traits::construct(&(chunk_map[0][--m_start]), _v_);
         };
 
+        [[nodiscard]] inline reference back() const noexcept
+        {
+            const size_type idx = m_size - 1;
+            const size_type block_idx = (m_start + idx) / m_chunk_capacity;
+            const size_type offset = (m_start + idx) % m_chunk_capacity;
+            return chunk_map[block_idx][offset];
+        };
+
+        [[nodiscard]] inline reference front() const noexcept
+        {
+
+            const size_type block_idx = (m_start) / m_chunk_capacity;
+            const size_type offset = (m_start) % m_chunk_capacity;
+            return chunk_map[block_idx][offset];
+        };
+
         [[nodiscard]] inline size_type size() const noexcept
         {
             return m_size;

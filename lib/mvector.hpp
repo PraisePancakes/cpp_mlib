@@ -138,7 +138,7 @@ namespace mlib
       reserve(_capacity_);
       for (size_t i = 0; i < _capacity_; i++)
       {
-        *(this->m_region_start + i) = _v_;
+        allocator_traits<Alloc>::construct(this->m_region_start + i, _v_);
         m_region_end++;
       }
     };
@@ -150,7 +150,7 @@ namespace mlib
       {
         for (size_t i = 0; i < size(); i++)
         {
-          m_alloc.destroy(m_region_start + i);
+          allocator_traits<Alloc>::destroy(m_region_start + i);
         }
       }
 
@@ -484,11 +484,10 @@ namespace mlib
 
       while (e > si)
       {
-        *(this->m_region_start + e) = *(this->m_region_start + (e - 1));
+        allocator_traits::construct(this->m_region_start + e, *(this->m_region_start + (e - 1)));
         e--;
       }
-
-      *(this->m_region_start + e) = _v_;
+      allocator_traits::construct(this->m_region_start + e, _v_);
       this->m_region_end++;
     };
 
@@ -540,6 +539,7 @@ namespace mlib
 
     reference operator[](size_type _ptr_index_) const
     {
+
       return *(this->m_region_start + _ptr_index_);
     };
 

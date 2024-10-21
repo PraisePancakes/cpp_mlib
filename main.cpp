@@ -6,17 +6,12 @@
 
 int main()
 {
-  mlib::deque<int> d;
+  mlib::vec<int> v;
 
-  for (size_t i = 0; i < 10; i++)
-  {
-    d.push_front(i);
-  }
+  v.push_back(5);
 
-  for (size_t i = 0; i < d.size(); i++)
-  {
-    std::cout << d[i] << " : ";
-  }
-
+  v.insert(1, 6);
+  v.insert(0, 4);
+  std::cout << v[0];
   return 0;
 }
