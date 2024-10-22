@@ -174,19 +174,79 @@ namespace mlib
     typedef allocator_traits<Alloc> allocator_traits;
     typedef allocator_traits::value_type value_type;
 
+    template <typename U>
+    class _VecIterator
+    {
+
+    public:
+      using this_it = _VecIterator<U>;
+      using category = random_access_iterator_tag;
+      using value_type = U;
+      using pointer = U *;
+      using const_pointer = const U *;
+      using reference = U &;
+      using const_reference = const U &;
+      using size_type = size_t;
+      using difference_type = std::ptrdiff_t;
+      pointer m_Iterator;
+      _VecIterator() : m_Iterator(nullptr) {};
+      _VecIterator(pointer _loc_) : m_Iterator(_loc_) {};
+
+      this_it &operator++()
+      {
+        ++m_Iterator;
+        return *this;
+      };
+
+      this_it &operator--()
+      {
+        --m_Iterator;
+        return *this;
+      }
+
+      this_it operator++(int)
+      {
+        this_it temp = *this;
+        ++(*this);
+        return temp;
+      };
+
+      this_it operator--(int)
+      {
+        this_it temp = *this;
+        --(*this);
+        return temp;
+      };
+
+      bool operator==(const this_it &other)
+      {
+        return m_Iterator == other.m_Iterator;
+      };
+
+      bool operator!=(const this_it &other)
+      {
+        return m_Iterator != other.m_Iterator;
+      }
+
+      reference operator*()
+      {
+        return *m_Iterator;
+      };
+
+      ~_VecIterator() {};
+    };
+
   public:
     typedef typename allocator_traits::pointer pointer;
-    typedef typename allocator_traits::const_pointer const_pointer;
     typedef typename allocator_traits::const_reference const_reference;
     typedef typename allocator_traits::reference reference;
     typedef ptrdiff_t difference_type;
     typedef size_t size_type;
 
-  public:
-    typedef mlib::normal_iterator<T *> iterator;
-    typedef mlib::normal_iterator<const T *> const_iterator;
-    typedef mlib::reverse_iterator<T *> reverse_iterator;
-    typedef mlib::reverse_iterator<const T *> const_reverse_iterator;
+    typedef _VecIterator<T> iterator;
+    typedef _VecIterator<const T> const_iterator;
+    typedef mlib::reverse_iterator<iterator> reverse_iterator;
+    typedef mlib::reverse_iterator<const_iterator> const_reverse_iterator;
 
   private:
     struct ISpliceStrategy
@@ -441,36 +501,6 @@ namespace mlib
       return *this;
     }
 
-    iterator begin() const
-    {
-      return iterator(this->m_region_start);
-    }
-
-    const_iterator cbegin() const
-    {
-
-      return const_iterator(this->m_region_start);
-    };
-
-    const_iterator cend() const
-    {
-      return const_iterator(this->m_region_end);
-    };
-
-    reverse_iterator rbegin() const
-    {
-      return reverse_iterator(this->m_region_end - 1);
-    }
-
-    reverse_iterator rend() const
-    {
-      return reverse_iterator(this->m_region_start - 1);
-    }
-
-    iterator end() const
-    {
-      return iterator(this->m_region_end);
-    }
     /*
         mlib::vec<int> v{2, 3, 4, 5};
 
@@ -564,7 +594,38 @@ namespace mlib
       }
     };
 
-    bool empty() const
+    iterator begin() const
+    {
+      return iterator(this->m_region_start);
+    };
+
+    iterator end() const
+    {
+      return iterator(this->m_region_end);
+    }
+
+    const_iterator cbegin() const
+    {
+      return const_iterator(this->m_region_start);
+    }
+
+    const_iterator cend() const
+    {
+      return const_iterator(this->m_region_end);
+    }
+
+    reverse_iterator rbegin() const
+    {
+      return reverse_iterator(this->m_region_end - 1);
+    }
+
+    reverse_iterator rend() const
+    {
+      return reverse_iterator(this->m_region_start - 1);
+    }
+
+    bool
+    empty() const
     {
       return this->size() == 0;
     }

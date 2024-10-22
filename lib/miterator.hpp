@@ -9,25 +9,38 @@ namespace mlib
     {
     };
 
+    struct forward_iterator_tag : public input_iterator_tag // iterators that may only move forward i.e singly-linked list,
+    {
+    };
+
+    struct bidirectional_tag : public forward_iterator_tag // bidirectional iterators are a type of forward iterators that may also move backwards, i.e doubly-linked list
+    {
+    };
+
     struct output_iterator_tag
     {
     };
 
-    struct forward_iterator_tag : public input_iterator_tag
+    struct random_access_iterator_tag // random_access iterators may be used on containers that allow truely random access via 'operator[](const size_t index)' i.e. vectors / arrays / deque / queue
     {
     };
 
-    struct bidirectional_tag : public forward_iterator_tag
-    {
-    };
-
-    struct random_access_iterator_tag
-    {
-    };
+    /*
+        contiguous iterators are also random access however,
+        they must perform on containers that promise a contiguous memory layout, i.e vectors / arrays.
+        Though they may be used depending on container implementation, they are forbidden to be used in mlib::deque and mlib::queue,
+        as these containers do not promise contiguous memory (implemented via memory chunks.)
+    */
 
     struct contiguous_iterator_tag : public random_access_iterator_tag
     {
     };
+
+    /*
+        @brief
+        Iterator traits represents an interface to which you may forward custom iterators to allowing for type extraction.
+
+    */
 
     template <typename Iter>
     struct iterator_traits
@@ -35,9 +48,20 @@ namespace mlib
         typedef Iter::difference_type difference_type;
         typedef Iter::value_type value_type;
         typedef Iter::pointer pointer;
+        typedef Iter::const_pointer const_pointer;
+        typedef Iter::const_reference const_reference;
         typedef Iter::reference reference;
         typedef Iter::category category;
     };
+
+    /*
+        @brief
+            template specializations for iterator_traits :
+        @param T* / const T*
+            T* and const T* will specialize for pointers specifically,
+            in a quasi-SFINAE way we can use raw pointers as iterators as well as user defined iterators.
+            no value types can be used as an iterator (int, char, etc...)
+    */
 
     template <typename T>
     struct iterator_traits<T *> // int* , char* etc..
@@ -63,93 +87,46 @@ namespace mlib
         typedef size_t size_type;
     };
 
-    template <class Iterator>
-    struct normal_iterator
-    {
-    protected:
-    public:
-        typedef iterator_traits<Iterator> iter_traits;
-        typedef random_access_iterator_tag iterator_category;
-        Iterator _pit;
-
-        normal_iterator() : _pit() {};
-        normal_iterator(iter_traits::pointer _loc_) : _pit(_loc_) {};
-
-        iter_traits::reference operator[](iter_traits::difference_type _i_) const noexcept
-        {
-            return *(_pit + _i_);
-        }
-
-        normal_iterator &operator=(const normal_iterator<Iterator> &_other_)
-        {
-            this->_pit = _other_._pit;
-            return *this;
-        };
-
-        normal_iterator &operator++()
-        {
-            _pit++;
-            return *this;
-        };
-
-        iter_traits::reference operator*()
-        {
-            return *_pit;
-        };
-
-        bool operator!=(const normal_iterator &_other_)
-        {
-            return _pit != _other_._pit;
-        }
-
-        bool operator==(const normal_iterator &_other_)
-        {
-            return _pit == _other_._pit;
-        }
-
-        ~normal_iterator()
-        {
-            _pit = nullptr;
-        };
-    };
-
-    template <typename Iterator>
+    template <typename Iter>
     class reverse_iterator
     {
+        typedef typename iterator_traits<Iter>::value_type value_type;
+        typedef typename iterator_traits<Iter>::pointer pointer;
+        typedef typename iterator_traits<Iter>::const_pointer const_pointer;
+        typedef typename iterator_traits<Iter>::reference reference;
+        typedef typename iterator_traits<Iter>::const_reference const_reference;
+        pointer m_RIterator;
 
     public:
-        typedef iterator_traits<Iterator> iter_traits;
-        Iterator _pit;
-
-        typedef typename iter_traits::difference_type difference_type;
-        reverse_iterator() : _pit() {};
-        reverse_iterator(iter_traits::pointer _loc_) : _pit(_loc_) {};
-
+        reverse_iterator() : m_RIterator(nullptr) {};
+        reverse_iterator(pointer _loc_) : m_RIterator(_loc_) {};
         reverse_iterator &operator++()
         {
-            this->_pit--;
+            m_RIterator--;
             return *this;
         };
 
-        bool operator==(const reverse_iterator &_other_)
+        reverse_iterator &operator--()
         {
-            return this->_pit == _other_._pit;
-        }
-
-        bool operator!=(const reverse_iterator &_other_)
-        {
-            return this->_pit != _other_._pit;
-        }
-
-        iter_traits::reference operator*()
-        {
-            return *this->_pit;
-        }
-
-        reverse_iterator &operator=(const reverse_iterator<Iterator> &_other_)
-        {
-            this->_pit = _other_._pit;
+            m_RIterator++;
+            return *this;
         };
+
+        reference operator*()
+        {
+            return *m_RIterator;
+        };
+
+        bool operator==(const reverse_iterator &other)
+        {
+            return this->m_RIterator == other.m_RIterator;
+        };
+
+        bool operator!=(const reverse_iterator &other)
+        {
+            return this->m_RIterator != other.m_RIterator;
+        };
+        ~reverse_iterator() = default;
     };
 
 }

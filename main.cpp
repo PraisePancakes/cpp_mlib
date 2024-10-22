@@ -3,15 +3,15 @@
 #include <vector>
 #include "lib/mdeque.hpp"
 #include "lib/mvector.hpp"
+#include <iterator>
 
 int main()
 {
-  mlib::vec<int> v;
+  mlib::vec<int> v{0, 1, 2, 3};
 
-  v.push_back(5);
-
-  v.insert(1, 6);
-  v.insert(0, 4);
-  std::cout << v[0];
+  for (auto it = v.rbegin(); it != v.rend(); ++it)
+  {
+    std::cout << *it;
+  }
   return 0;
 }

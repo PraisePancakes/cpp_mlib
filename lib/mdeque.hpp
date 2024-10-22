@@ -8,6 +8,12 @@
 
 namespace mlib
 {
+
+    [[nodiscard]] inline static size_t _S_dq_chunk_capacity(const size_t _type_size_)
+    {
+        return _type_size_ < DQ_CHUNK_BYTE_SIZE ? size_t(DQ_CHUNK_BYTE_SIZE / _type_size_) : size_t(1);
+    };
+
     template <typename T, typename Alloc = mlib::allocator<T>>
     class deque
     {
@@ -23,13 +29,8 @@ namespace mlib
         using reference = typename allocator_traits::reference;
         using const_reference = typename allocator_traits::const_reference;
 
-        [[nodiscard]] inline static size_type _S_dq_chunk_capacity(const size_type _type_size_)
-        {
-            return _type_size_ < DQ_CHUNK_BYTE_SIZE ? size_type(DQ_CHUNK_BYTE_SIZE / _type_size_) : size_type(1);
-        };
-
     private:
-        inline static size_type m_chunk_capacity = _S_dq_chunk_capacity(sizeof(value_type));
+        size_type m_chunk_capacity = _S_dq_chunk_capacity(sizeof(value_type));
         size_type m_start;
         size_type m_finish;
         size_type m_size = 0;
@@ -71,14 +72,23 @@ namespace mlib
 
         void pop_back()
         {
+            if (m_size == 0)
+                return;
             allocator_traits::destroy(&chunk_map[chunk_map.size() - 1][m_finish--]);
             m_size--;
         };
 
         void pop_front()
         {
+            if (m_size == 0)
+                return;
             allocator_traits::destroy(&chunk_map[0][m_start++]);
             m_size--;
+        };
+
+        [[nodiscard]] bool empty() const
+        {
+            return m_size == 0;
         };
 
         void push_front(const_reference _v_)
