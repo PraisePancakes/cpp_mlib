@@ -1,6 +1,7 @@
 #pragma once
 #include "mallocator.hpp"
 #include "miterator.hpp"
+#include <cstddef>
 #include <iostream>
 #define _DEF_STR_CAPACITY 1
 #define _AMORT_FAC 2
@@ -22,7 +23,7 @@ namespace mlib
         typedef const char_type &const_reference;
 
         typedef std::ptrdiff_t difference_type;
-        typedef std::size_t size_type;
+        typedef size_t size_type;
 
         [[nodiscard]] static constexpr size_t length(const char_type *_data_) noexcept
         {
@@ -67,7 +68,7 @@ namespace mlib
     public:
         typedef wchar_t char_type;
         typedef std::ptrdiff_t difference_type;
-        typedef std::size_t size_type;
+        typedef size_t size_type;
 
         [[nodiscard]] static constexpr size_t length(const char_type *_data_) noexcept
         {
@@ -145,11 +146,6 @@ namespace mlib
         m_Final_impl f_impl;
 
     public:
-        typedef mlib::normal_iterator<T *> iterator;
-        typedef mlib::normal_iterator<const T *> const_iterator;
-        typedef mlib::reverse_iterator<T *> reverse_iterator;
-        typedef mlib::reverse_iterator<const T *> const_reverse_iterator;
-
     public:
         str_base() : m_region_start(nullptr), m_region_end(nullptr), m_region_capacity(nullptr), m_sso_optimized(true)
         {
@@ -191,36 +187,6 @@ namespace mlib
         size_type length() const
         {
             return size();
-        }
-
-        iterator begin() const
-        {
-            return iterator(this->m_region_start);
-        }
-        const_iterator cbegin() const
-        {
-
-            return const_iterator(this->m_region_start);
-        };
-
-        const_iterator cend() const
-        {
-            return const_iterator(this->m_region_end);
-        };
-
-        reverse_iterator rbegin() const
-        {
-            return reverse_iterator(this->m_region_end - 1);
-        }
-
-        reverse_iterator rend() const
-        {
-            return reverse_iterator(this->m_region_start - 1);
-        }
-
-        iterator end() const
-        {
-            return iterator(this->m_region_end);
         }
 
         ~str_base()
