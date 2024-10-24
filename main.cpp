@@ -10,7 +10,7 @@ int main()
 {
   mlib::deque<int> d;
 
-  for (size_t i = 0; i < 10; i++)
+  for (size_t i = 0; i < 5; i++)
   {
     d.push_back(i);
   }

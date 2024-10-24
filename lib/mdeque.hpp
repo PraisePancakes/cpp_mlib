@@ -155,7 +155,7 @@ namespace mlib
             size_type off_i = (m_start_index) % m_chunk_capacity;
 
             allocator_traits::destroy(&m_map[m_start_index + chk_i][off_i]); // possibly &back() ?
-            if (m_start_index == DQ_CHUNK_CAP)
+            if (m_start_index == DQ_CHUNK_CAP - 1)
             {
                 m_fchunk++;
                 m_start_index = 0;
