@@ -399,4 +399,16 @@ namespace mlib
     template <typename T>
     constexpr bool is_void_v = is_void<T>::value;
 
+    template <bool C, typename T, typename F>
+    struct conditional
+    {
+        using type = T;
+    };
+
+    template <typename T, typename F>
+    struct conditional<false, T, F>
+    {
+        using type = F;
+    };
+
 }

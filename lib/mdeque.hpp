@@ -31,8 +31,7 @@ namespace mlib
             using const_reference = const U &;
             using size_type = size_t;
             using difference_type = std::ptrdiff_t;
-
-            using deque_type = typename std::conditional<std::is_const<U>::value, const deque<typename std::remove_const<U>::type>, deque<U>>::type;
+            using deque_type = typename mlib::conditional<mlib::is_const<U>::value, const deque<typename mlib::remove_const<U>::type>, deque<U>>::type;
 
         private:
             pointer m_iterator;
@@ -206,22 +205,22 @@ namespace mlib
             m_size++;
         }
 
-        iterator begin()
+        [[nodiscard]] iterator begin() const
         {
             return iterator(this, 0);
         }
 
-        iterator end()
+        [[nodiscard]] iterator end() const
         {
             return iterator(this, this->m_size);
         }
 
-        const_iterator cbegin()
+        [[nodiscard]] const_iterator cbegin() const
         {
             return const_iterator(this, 0);
         };
 
-        const_iterator cend()
+        [[nodiscard]] const_iterator cend() const
         {
             return const_iterator(this, this->m_size);
         };
