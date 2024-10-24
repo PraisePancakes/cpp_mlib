@@ -136,12 +136,35 @@ namespace mlib
         {
             size_type chk_i = (m_start_index + m_end_index) / m_chunk_capacity;
             size_type off_i = (m_start_index + m_end_index) % m_chunk_capacity;
-
             allocator_traits::destroy(&m_map[m_fchunk + chk_i][off_i]);
+
+            if (m_end_index == 0)
+            {
+                m_end_index = DQ_CHUNK_CAP;
+                m_bchunk--;
+            }
+            else
+            {
+                m_end_index--;
+            }
             m_size--;
         };
         inline void pop_front() noexcept
         {
+            size_type chk_i = (m_start_index) / m_chunk_capacity;
+            size_type off_i = (m_start_index) % m_chunk_capacity;
+
+            allocator_traits::destroy(&m_map[m_start_index + chk_i][off_i]); // possibly &back() ?
+            if (m_start_index == DQ_CHUNK_CAP)
+            {
+                m_fchunk++;
+                m_start_index = 0;
+            }
+            else
+            {
+                m_start_index++;
+            }
+            m_size--;
         }
 
         reference operator[](size_type _index_)
