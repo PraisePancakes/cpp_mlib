@@ -19,6 +19,75 @@ namespace mlib
     {
         typedef allocator_traits<Alloc> allocator_traits;
 
+        template <typename U, typename Index>
+        class impl_deque_iterator
+        {
+        public:
+            using this_it = impl_deque_iterator<U, Index>;
+            using value_type = U;
+            using pointer = U *;
+            using reference = U &;
+            using const_pointer = const U *;
+            using const_reference = const U &;
+            using size_type = size_t;
+            using difference_type = std::ptrdiff_t;
+
+            using deque_type = typename std::conditional<std::is_const<U>::value, const deque<typename std::remove_const<U>::type>, deque<U>>::type;
+
+        private:
+            pointer m_iterator;
+            deque_type *dq;
+            Index m_index;
+
+        public:
+            impl_deque_iterator() : m_iterator(nullptr), dq(nullptr), m_index(0) {};
+            impl_deque_iterator(deque_type *_dq_, Index _si_) : m_iterator(_dq_->_get_pointer_to_index(_si_)), dq(_dq_),
+                                                                m_index(_si_) {};
+
+            this_it &operator++()
+            {
+                m_iterator = dq->_get_pointer_to_index(++m_index);
+                return *this;
+            };
+
+            this_it operator++(int)
+            {
+                this_it temp = *this;
+                ++(*this);
+                return *this;
+            };
+
+            this_it operator--(int)
+            {
+                this_it temp = *this;
+                --(*this);
+                return *this;
+            }
+
+            this_it &operator--()
+            {
+                m_iterator = dq->_get_pointer_to_index(--m_index);
+                return *this;
+            };
+
+            bool operator==(const this_it &_other_of_this_type_)
+            {
+                return this->m_iterator == _other_of_this_type_.m_iterator;
+            };
+
+            bool operator!=(const this_it &_other_of_this_type_)
+            {
+                return !(*this == _other_of_this_type_);
+            }
+
+            reference operator*()
+            {
+                return *m_iterator;
+            };
+
+            ~impl_deque_iterator() {};
+        };
+
     public:
         using value_type = T;
         using pointer = T *;
@@ -29,17 +98,24 @@ namespace mlib
         using difference_type = std::ptrdiff_t;
         using map_type = T **;
 
+    public:
+        using iterator = impl_deque_iterator<T, size_type>;
+        using const_iterator = impl_deque_iterator<const T, size_type>;
+        using reverse_iterator = mlib::reverse_iterator<iterator>;
+        using const_reverse_iterator = mlib::reverse_iterator<const_iterator>;
+
     private:
         map_type m_map;             // array of all chunks, each chunk is of capacity = DQ_CHUNK_CAP;
         size_type m_fchunk;         // index of the first chunk allocated
-        size_type m_bchunk;         // index of the last chunk allocated
+        size_type m_bchunk;         // index of the back chunk allocated
         size_type m_start_index;    // index of the first actual deque index
         size_type m_end_index;      // index of the last actual deque index
         size_type m_map_capacity;   // capacity of map, initally 8
         size_type m_chunk_capacity; // DQ_CHUNK_CAP
         size_type m_size;           // current size of deque (num elems)
 
-        size_type _grow_and_copy_at(size_type _off_, size_type _null_range_s_, size_type _null_range_e_)
+        size_type
+        _grow_and_copy_at(size_type _off_, size_type _null_range_s_, size_type _null_range_e_)
         {
             size_type new_map_capacity = m_map_capacity * 2;
             map_type new_map = (T **)malloc(sizeof(T *) * new_map_capacity);
@@ -59,6 +135,14 @@ namespace mlib
             m_map_capacity = new_map_capacity;
             return _old_cap_ret_;
         }
+
+        pointer _get_pointer_to_index(size_t _index_) const
+        {
+            size_type chk_i = (m_start_index + _index_) / m_chunk_capacity;
+            size_type off_i = (m_start_index + _index_) % m_chunk_capacity;
+
+            return &m_map[m_fchunk + chk_i][off_i];
+        };
 
     public:
         deque() : m_map_capacity(DQ_INITIAL_MAP_CAP), m_chunk_capacity(DQ_CHUNK_CAP), m_start_index(0), m_end_index(0), m_fchunk(0), m_bchunk(0), m_size(0)
@@ -122,22 +206,39 @@ namespace mlib
             m_size++;
         }
 
-        inline reference back() noexcept
+        iterator begin()
+        {
+            return iterator(this, 0);
+        }
+
+        iterator end()
+        {
+            return iterator(this, this->m_size);
+        }
+
+        const_iterator cbegin()
+        {
+            return const_iterator(this, 0);
+        };
+
+        const_iterator cend()
+        {
+            return const_iterator(this, this->m_size);
+        };
+
+        inline reference back() const noexcept
         {
             return (*this)[m_size - 1];
         };
 
-        inline reference front() noexcept
+        inline reference front() const noexcept
         {
             return (*this)[0];
         }
 
         inline void pop_back() noexcept
         {
-            size_type chk_i = (m_start_index + m_end_index) / m_chunk_capacity;
-            size_type off_i = (m_start_index + m_end_index) % m_chunk_capacity;
-            allocator_traits::destroy(&m_map[m_fchunk + chk_i][off_i]);
-
+            allocator_traits::destroy(_get_pointer_to_index(m_end_index));
             if (m_end_index == 0)
             {
                 m_end_index = DQ_CHUNK_CAP;
@@ -151,10 +252,7 @@ namespace mlib
         };
         inline void pop_front() noexcept
         {
-            size_type chk_i = (m_start_index) / m_chunk_capacity;
-            size_type off_i = (m_start_index) % m_chunk_capacity;
-
-            allocator_traits::destroy(&m_map[m_start_index + chk_i][off_i]); // possibly &back() ?
+            allocator_traits::destroy(_get_pointer_to_index(m_start_index));
             if (m_start_index == DQ_CHUNK_CAP - 1)
             {
                 m_fchunk++;
@@ -169,10 +267,8 @@ namespace mlib
 
         reference operator[](size_type _index_)
         {
-            size_type chk_i = (m_start_index + _index_) / m_chunk_capacity;
-            size_type off_i = (m_start_index + _index_) % m_chunk_capacity;
-
-            return m_map[m_fchunk + chk_i][off_i];
+            pointer i_ptr = _get_pointer_to_index(_index_);
+            return *i_ptr;
         };
 
         [[nodiscard]] inline size_type capacity() const noexcept { return m_map_capacity; };

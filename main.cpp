@@ -15,11 +15,9 @@ int main()
     d.push_back(i);
   }
 
-  d.pop_front();
-
-  for (size_t i = 0; i < d.size(); i++)
+  for (auto it = d.cbegin(); it != d.cend(); it++)
   {
-    std::cout << d[i];
+    std::cout << *it;
   }
 
   return 0;
