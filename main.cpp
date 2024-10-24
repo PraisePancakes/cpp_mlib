@@ -6,18 +6,30 @@
 #include <iterator>
 #include "lib/mstring.hpp"
 
+struct Foo
+{
+  Foo() {};
+  ~Foo() { std::cout << "destructing Foo" << std::endl; };
+};
+
+void destroy_foo(Foo *f)
+{
+  f->~Foo();
+};
+
+Foo &get_foo(std::vector<Foo> &fv, size_t index)
+{
+  return fv[index];
+};
+
 int main()
 {
-  mlib::deque<int> d;
-  for (size_t i = 0; i < 5; i++)
-  {
-    d.push_back(i + 1);
-  }
 
-  for (auto it = d.begin(); it != d.end(); it++)
-  {
-    std::cout << *it;
-  };
+  Foo f1;
+  std::vector<Foo> v;
+  v.push_back(f1);
+
+  destroy_foo(&(get_foo(v, 0)));
 
   return 0;
-};
+}

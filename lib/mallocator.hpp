@@ -38,6 +38,11 @@ namespace mlib
             }
         }
 
+        static pointer allocate(Alloc &alloc, difference_type _n_)
+        {
+            return alloc.allocate(_n_);
+        };
+
         static void reallocate_at(pointer &_loc_, difference_type _n_)
         {
             _loc_ = (pointer)realloc(_loc_, _n_ * sizeof(value_type));
