@@ -23,6 +23,7 @@ namespace mlib
         class impl_deque_iterator
         {
         public:
+            using category = random_access_iterator_tag;
             using this_it = impl_deque_iterator<U, Index>;
             using value_type = U;
             using pointer = U *;
@@ -54,6 +55,11 @@ namespace mlib
                 this_it temp = *this;
                 ++(*this);
                 return *this;
+            };
+
+            pointer get_iterator() const
+            {
+                return m_iterator;
             };
 
             this_it operator--(int)
@@ -205,14 +211,24 @@ namespace mlib
             m_size++;
         }
 
-        [[nodiscard]] iterator begin() const
+        [[nodiscard]] iterator begin()
         {
             return iterator(this, 0);
         }
 
-        [[nodiscard]] iterator end() const
+        [[nodiscard]] const_iterator begin() const
+        {
+            return const_iterator(this, 0);
+        }
+
+        [[nodiscard]] iterator end()
         {
             return iterator(this, this->m_size);
+        }
+
+        [[nodiscard]] const_iterator end() const
+        {
+            return const_iterator(this, this->m_size);
         }
 
         [[nodiscard]] const_iterator cbegin() const
@@ -223,6 +239,39 @@ namespace mlib
         [[nodiscard]] const_iterator cend() const
         {
             return const_iterator(this, this->m_size);
+        };
+
+        [[nodiscard]] reverse_iterator rbegin()
+        {
+            iterator it(this, this->m_size - 1);
+            return reverse_iterator(it);
+        };
+        [[nodiscard]] reverse_iterator rend()
+        {
+            iterator it(this, -1);
+            return reverse_iterator(it);
+        };
+
+        [[nodiscard]] const_reverse_iterator rbegin() const
+        {
+            const_iterator it(this, this->m_size - 1);
+            return const_reverse_iterator(it);
+        };
+        [[nodiscard]] const_reverse_iterator rend() const
+        {
+            const_iterator it(this, -1);
+            return const_reverse_iterator(it);
+        };
+
+        [[nodiscard]] const_reverse_iterator rcbegin() const
+        {
+            const_iterator it(this, this->m_size - 1);
+            return const_reverse_iterator(it);
+        };
+        [[nodiscard]] const_reverse_iterator rcend() const
+        {
+            const_iterator it(this, -1);
+            return const_reverse_iterator(it);
         };
 
         inline reference back() const noexcept

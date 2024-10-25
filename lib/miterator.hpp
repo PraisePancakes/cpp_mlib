@@ -90,16 +90,17 @@ namespace mlib
     template <typename Iter>
     class reverse_iterator
     {
+        typedef typename iterator_traits<Iter>::category category;
         typedef typename iterator_traits<Iter>::value_type value_type;
         typedef typename iterator_traits<Iter>::pointer pointer;
         typedef typename iterator_traits<Iter>::const_pointer const_pointer;
         typedef typename iterator_traits<Iter>::reference reference;
         typedef typename iterator_traits<Iter>::const_reference const_reference;
-        pointer m_RIterator;
+        Iter m_RIterator;
 
     public:
         reverse_iterator() : m_RIterator(nullptr) {};
-        reverse_iterator(pointer _loc_) : m_RIterator(_loc_) {};
+        reverse_iterator(Iter _loc_) : m_RIterator(_loc_) {};
         reverse_iterator &operator++()
         {
             m_RIterator--;
