@@ -53,7 +53,7 @@ namespace mlib
 
         static char_type *copy(char_type *const _dest_, const char_type *const _src_, size_t _n_) noexcept
         {
-            for (size_t i = 0; i != _n_; ++i)
+            for (size_t i = 0; i < _n_; ++i)
             {
                 _dest_[i] = _src_[i];
             }
@@ -246,8 +246,9 @@ namespace mlib
 
         basic_string &operator=(const basic_string &_other_)
         {
-            _traits::copy(this->m_region_start, _other_.data(), _other_.size());
 
+            _traits::copy(this->m_region_start, _other_.data(), _other_.size());
+            this->m_region_start[_other_.size()] = '\0';
             return *this;
         };
 
