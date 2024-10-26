@@ -114,8 +114,8 @@ namespace mlib
         typedef CTraits _traits;
         typedef allocator_traits<Alloc> allocator_traits;
         typedef allocator_traits::value_type char_type;
-        typedef allocator_traits::pointer pointer;
-        typedef allocator_traits::reference reference;
+        typedef T *pointer;
+        typedef T &reference;
         typedef allocator_traits::const_pointer const_pointer;
 
         typedef _traits::size_type size_type;
@@ -205,6 +205,7 @@ namespace mlib
     {
 
         typedef CTraits _traits;
+
         size_t _calculate_amortized_growth()
         {
             return ((this->m_region_capacity - this->m_region_start + 1) << 1);
@@ -231,6 +232,74 @@ namespace mlib
             }
         }
 
+        template <typename U>
+        class impl_string_iterator
+        {
+            using value_type = U;
+            using pointer = U *;
+            using const_pointer = const U *;
+            using reference = U &;
+            using const_reference = const U &;
+            using category = bidirectional_tag;
+            using size_type = size_t;
+            using difference_type = std::ptrdiff_t;
+            using this_it = impl_string_iterator<U>;
+
+            pointer m_Iterator;
+
+        public:
+            impl_string_iterator() : m_Iterator(nullptr) {};
+            impl_string_iterator(pointer _loc_) : m_Iterator(_loc_) {};
+
+            this_it &operator++()
+            {
+                m_Iterator++;
+                return *this;
+            };
+
+            this_it &operator--()
+            {
+                m_Iterator--;
+                return *this;
+            }
+
+            this_it operator++(int)
+            {
+                this_it temp = *this;
+                ++(*this);
+                return temp;
+            }
+
+            this_it operator--(int)
+            {
+                this_it temp = *this;
+                --(*this);
+                return temp;
+            }
+
+            reference operator*()
+            {
+                return *m_Iterator;
+            };
+
+            bool operator==(const this_it &_other_)
+            {
+                return this->m_Iterator == _other_.m_Iterator;
+            }
+
+            bool operator!=(const this_it &_other_)
+            {
+                return !((*this) == _other_);
+            };
+
+            ~impl_string_iterator() {};
+        };
+
+        using iterator = impl_string_iterator<T>;
+        using const_iterator = impl_string_iterator<const T>;
+        using reverse_iterator = mlib::reverse_iterator<iterator>;
+        using const_reverse_iterator = mlib::reverse_iterator<const_iterator>;
+
     public:
         basic_string() : str_base<T, CTraits, Alloc>("", 0) {
 
@@ -246,9 +315,14 @@ namespace mlib
 
         basic_string &operator=(const basic_string &_other_)
         {
+            if (_other_.size() >= this->capacity())
+            {
+                this->_resize_by_offset(_other_.size() - this->capacity());
+            }
 
             _traits::copy(this->m_region_start, _other_.data(), _other_.size());
             this->m_region_start[_other_.size()] = '\0';
+            this->m_region_end = this->m_region_start + _other_.size();
             return *this;
         };
 
@@ -271,6 +345,16 @@ namespace mlib
 
             *(this->m_region_end) = '\0';
         }
+
+        iterator begin()
+        {
+            return iterator(this->m_region_start);
+        };
+
+        iterator end()
+        {
+            return iterator(this->m_region_end);
+        };
 
         void push_back(typename Alloc::reference &_v_)
         {
@@ -436,7 +520,7 @@ namespace mlib
             }
 
             mlib::basic_string<typename _traits::char_type> s(__end__ - __start__);
-            std::cout << s.capacity() << std::endl;
+
             for (typename _traits::size_type i = __start__; i < __end__; i++)
             {
                 this->m_allocator.construct(s.m_region_start + i, *(this->m_region_start + i));

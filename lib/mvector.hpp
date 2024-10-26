@@ -175,11 +175,11 @@ namespace mlib
     typedef allocator_traits::value_type value_type;
 
     template <typename U>
-    class _VecIterator
+    class impl_vec_iterator
     {
 
     public:
-      using this_it = _VecIterator<U>;
+      using this_it = impl_vec_iterator<U>;
       using category = random_access_iterator_tag;
       using value_type = U;
       using pointer = U *;
@@ -189,8 +189,8 @@ namespace mlib
       using size_type = size_t;
       using difference_type = std::ptrdiff_t;
       pointer m_Iterator;
-      _VecIterator() : m_Iterator(nullptr) {};
-      _VecIterator(pointer _loc_) : m_Iterator(_loc_) {};
+      impl_vec_iterator() : m_Iterator(nullptr) {};
+      impl_vec_iterator(pointer _loc_) : m_Iterator(_loc_) {};
 
       this_it &operator++()
       {
@@ -233,7 +233,7 @@ namespace mlib
         return *m_Iterator;
       };
 
-      ~_VecIterator() {};
+      ~impl_vec_iterator() {};
     };
 
   public:
@@ -243,8 +243,8 @@ namespace mlib
     typedef ptrdiff_t difference_type;
     typedef size_t size_type;
 
-    typedef _VecIterator<T> iterator;
-    typedef _VecIterator<const T> const_iterator;
+    typedef impl_vec_iterator<T> iterator;
+    typedef impl_vec_iterator<const T> const_iterator;
     typedef mlib::reverse_iterator<iterator> reverse_iterator;
     typedef mlib::reverse_iterator<const_iterator> const_reverse_iterator;
 

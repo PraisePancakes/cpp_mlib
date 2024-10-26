@@ -10,8 +10,8 @@ int main()
 {
   mlib::string str;
 
-  str = "hello";
 
-  std::cout << str;
+
+
   return 0;
 };
