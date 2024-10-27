@@ -13,13 +13,14 @@ int main()
 
   for (int i = 0; i < 10; ++i)
   {
-    d.append_back(i + 1);
+    d.append_back(i);
   };
 
-  for (auto it = d.rbegin(); it != d.rend(); ++it)
+  d.reverse();
+
+  for (size_t i = 0; i < d.size(); ++i)
   {
-   
-    std::cout << *it;
+    std::cout << d[i] << " : ";
   }
 
   return 0;

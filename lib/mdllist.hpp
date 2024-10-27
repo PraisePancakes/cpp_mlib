@@ -153,6 +153,25 @@ namespace mlib
             return const_reverse_iterator(this->_head_->_prev_);
         };
 
+        void reverse()
+        {
+            _dllnode_ *ahead = nullptr;
+            _dllnode_ *prev = nullptr;
+            _dllnode_ *curr = _head_;
+
+            while (curr)
+            {
+                ahead = curr->_next_;
+                curr->_next_ = prev;
+                curr->_prev_ = ahead;
+                prev = curr;
+                curr = ahead;
+            }
+
+            _trail_ = _head_;
+            _head_ = prev;
+        };
+
         void append_back(const_reference v)
         {
             if (!_head_)
