@@ -8,10 +8,13 @@
 
 int main()
 {
-  mlib::string str;
+  mlib::string str = "hello world";
 
+  for (auto it = str.crbegin(); it != str.crend(); it++)
+  {
 
-
+    std::cout << *it;
+  }
 
   return 0;
 };

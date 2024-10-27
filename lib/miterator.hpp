@@ -113,6 +113,13 @@ namespace mlib
             return *this;
         };
 
+        reverse_iterator operator++(int)
+        {
+            reverse_iterator temp = *this;
+            --(m_RIterator);
+            return *this;
+        }
+
         reference operator*()
         {
             return *m_RIterator;

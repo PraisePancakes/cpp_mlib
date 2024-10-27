@@ -235,6 +235,8 @@ namespace mlib
         template <typename U>
         class impl_string_iterator
         {
+
+        public:
             using value_type = U;
             using pointer = U *;
             using const_pointer = const U *;
@@ -245,6 +247,7 @@ namespace mlib
             using difference_type = std::ptrdiff_t;
             using this_it = impl_string_iterator<U>;
 
+        private:
             pointer m_Iterator;
 
         public:
@@ -326,7 +329,9 @@ namespace mlib
             return *this;
         };
 
-        basic_string(const _traits::size_type _size_) : str_base<T, CTraits, Alloc>("", _size_) {};
+        explicit basic_string(const _traits::size_type _size_) : str_base<T, CTraits, Alloc>("", _size_) {
+
+                                                                 };
 
         void push_back(typename Alloc::const_reference _v_)
         {
@@ -355,6 +360,36 @@ namespace mlib
         {
             return iterator(this->m_region_end);
         };
+
+        const_iterator cbegin() const
+        {
+            return const_iterator(this->m_region_start);
+        }
+
+        const_iterator cend() const
+        {
+            return const_iterator(this->m_region_end);
+        }
+
+        reverse_iterator rbegin()
+        {
+            return reverse_iterator(this->m_region_end);
+        };
+
+        reverse_iterator rend()
+        {
+            return reverse_iterator(this->m_region_start - 1);
+        }
+
+        const_reverse_iterator crbegin() const
+        {
+            return const_reverse_iterator(this->m_region_end);
+        }
+
+        const_reverse_iterator crend() const
+        {
+            return const_reverse_iterator(this->m_region_start);
+        }
 
         void push_back(typename Alloc::reference &_v_)
         {

@@ -476,7 +476,7 @@ namespace mlib
       _other_.m_region_end = nullptr;
     };
 
-    explicit vec(size_type _n_, const value_type &_v_) : vec_base<T, Alloc>(_n_)
+    vec(size_type _n_, const value_type &_v_) : vec_base<T, Alloc>(_n_)
     {
 
       for (size_type i = 0; i < _n_; i++)
@@ -485,6 +485,10 @@ namespace mlib
         push_back(_v_);
       }
     }
+
+    vec(const allocator<value_type> &_alloc_, size_type _n_) : vec_base<T, Alloc>(_alloc_, _n_) {
+
+                                                               };
 
     vec &operator=(const vec &_other_)
     {
@@ -548,10 +552,6 @@ namespace mlib
         push_back(*it);
       }
     };
-
-    explicit vec(const allocator<value_type> &_alloc_, size_type _n_) : vec_base<T, Alloc>(_alloc_, _n_) {
-
-                                                                        };
 
     bool operator==(const mlib::vec<value_type> &_other_)
     {
