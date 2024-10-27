@@ -5,14 +5,19 @@
 #include "lib/mvector.hpp"
 #include <iterator>
 #include "lib/mstring.hpp"
+#include "lib/mdllist.hpp"
 
 int main()
 {
-  mlib::string str = "hello world";
+  mlib::dllist<int> d;
 
-  for (auto it = str.crbegin(); it != str.crend(); it++)
+  for (int i = 0; i < 10; ++i)
   {
+    d.append_back(i + 1);
+  };
 
+  for (auto it = d.begin(); it != d.end(); ++it)
+  {
     std::cout << *it;
   }
 

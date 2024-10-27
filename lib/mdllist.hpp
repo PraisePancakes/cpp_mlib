@@ -37,11 +37,77 @@ namespace mlib
             return (_index_ >= (std::floor(_sz_ / 2)));
         };
 
+        template <typename U>
+        class impl_dllist_iterator
+        {
+        public:
+            using value_type = U;
+            using pointer = U *;
+            using const_pointer = const U *;
+            using reference = U &;
+            using const_reference = const U &;
+            using category = bidirectional_tag;
+            using size_type = size_t;
+            using difference_type = ptrdiff_t;
+
+        private:
+            _dllnode_ *m_iterator;
+
+        public:
+            impl_dllist_iterator() : m_iterator(nullptr) {
+                                     };
+            impl_dllist_iterator(_dllnode_ *_loc_) : m_iterator(_loc_) {};
+
+            reference operator*()
+            {
+                return m_iterator->_v_;
+            };
+
+            impl_dllist_iterator &operator++()
+            {
+                m_iterator = m_iterator->_next_;
+                return *this;
+            };
+
+            impl_dllist_iterator &operator--()
+            {
+                m_iterator = m_iterator->_prev_;
+                return *this;
+            };
+
+            bool operator==(const impl_dllist_iterator &_other_) const noexcept
+            {
+                return this->m_iterator == _other_.m_iterator;
+            };
+
+            bool operator!=(const impl_dllist_iterator &_other_) const noexcept
+            {
+                return !(*this == _other_);
+            };
+
+            ~impl_dllist_iterator() {};
+        };
+
     public:
+        using iterator = impl_dllist_iterator<T>;
+        using const_iterator = impl_dllist_iterator<const T>;
+        using reverse_iterator = mlib::reverse_iterator<iterator>;
+        using const_reverse_iterator = mlib::reverse_iterator<const iterator>;
+
         dllist() : _head_(nullptr), _tail_(nullptr), _trail_(nullptr), _sz_(0) {};
         dllist &operator=(const dllist &_other_) {};
         dllist(const dllist &_other_) {};
         dllist(dllist &&_other_) {
+        };
+
+        iterator begin()
+        {
+            return iterator(this->_head_);
+        };
+
+        iterator end()
+        {
+            return iterator(this->_tail_);
         };
 
         void append_back(const_reference v)
