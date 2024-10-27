@@ -378,7 +378,7 @@ namespace mlib
 
         reverse_iterator rend()
         {
-            return reverse_iterator(this->m_region_start - 1);
+            return reverse_iterator(this->m_region_start);
         }
 
         const_reverse_iterator crbegin() const

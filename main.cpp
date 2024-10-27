@@ -16,8 +16,9 @@ int main()
     d.append_back(i + 1);
   };
 
-  for (auto it = d.begin(); it != d.end(); ++it)
+  for (auto it = d.rbegin(); it != d.rend(); ++it)
   {
+   
     std::cout << *it;
   }
 

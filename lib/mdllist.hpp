@@ -75,6 +75,20 @@ namespace mlib
                 return *this;
             };
 
+            impl_dllist_iterator operator--(int)
+            {
+                impl_dllist_iterator temp = *this;
+                --(*this);
+                return *this;
+            };
+
+            impl_dllist_iterator operator++(int)
+            {
+                impl_dllist_iterator temp = *this;
+                ++(*this);
+                return *this;
+            };
+
             bool operator==(const impl_dllist_iterator &_other_) const noexcept
             {
                 return this->m_iterator == _other_.m_iterator;
@@ -92,7 +106,7 @@ namespace mlib
         using iterator = impl_dllist_iterator<T>;
         using const_iterator = impl_dllist_iterator<const T>;
         using reverse_iterator = mlib::reverse_iterator<iterator>;
-        using const_reverse_iterator = mlib::reverse_iterator<const iterator>;
+        using const_reverse_iterator = mlib::reverse_iterator<const_iterator>;
 
         dllist() : _head_(nullptr), _tail_(nullptr), _trail_(nullptr), _sz_(0) {};
         dllist &operator=(const dllist &_other_) {};
@@ -100,14 +114,43 @@ namespace mlib
         dllist(dllist &&_other_) {
         };
 
-        iterator begin()
+        iterator begin() const
         {
             return iterator(this->_head_);
         };
 
-        iterator end()
+        iterator end() const
         {
             return iterator(this->_tail_);
+        };
+        const_iterator cbegin() const
+        {
+            return const_iterator(this->_head_);
+        };
+
+        const_iterator cend() const
+        {
+            return const_iterator(this->_tail_);
+        };
+
+        reverse_iterator rbegin() const
+        {
+            return reverse_iterator(this->_trail_);
+        };
+
+        reverse_iterator rend() const
+        {
+            return reverse_iterator(this->_head_->_prev_);
+        };
+
+        const_reverse_iterator crbegin() const
+        {
+            return const_reverse_iterator(this->_trail_);
+        };
+
+        const_reverse_iterator crend() const
+        {
+            return const_reverse_iterator(this->_head_->_prev_);
         };
 
         void append_back(const_reference v)
