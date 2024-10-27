@@ -16,11 +16,11 @@ int main()
     d.append_back(i);
   };
 
-  d.reverse();
+  d.append_back(4).reverse().append_front(47);
 
-  for (size_t i = 0; i < d.size(); ++i)
+  for (size_t i = 0; i < d.size(); i++)
   {
-    std::cout << d[i] << " : ";
+    std::cout << d[i] << std::endl;
   }
 
   return 0;

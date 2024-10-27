@@ -15,6 +15,8 @@ namespace mlib
         using size_type = allocator_traits::size_type;
 
     private:
+        using this_type = dllist<T, Alloc>;
+
         struct _dllnode_
         {
             _dllnode_ *_prev_;
@@ -153,7 +155,7 @@ namespace mlib
             return const_reverse_iterator(this->_head_->_prev_);
         };
 
-        void reverse()
+        this_type &reverse()
         {
             _dllnode_ *ahead = nullptr;
             _dllnode_ *prev = nullptr;
@@ -170,9 +172,10 @@ namespace mlib
 
             _trail_ = _head_;
             _head_ = prev;
+            return *this;
         };
 
-        void append_back(const_reference v)
+        this_type &append_back(const_reference v)
         {
             if (!_head_)
             {
@@ -190,9 +193,10 @@ namespace mlib
                 _tail_ = _tail_->_next_;
             }
             ++_sz_;
+            return *this;
         };
 
-        void append_front(const_reference v)
+        this_type &append_front(const_reference v)
         {
             if (_head_ == nullptr)
             {
@@ -208,29 +212,32 @@ namespace mlib
                 _head_ = _head_->_prev_;
             };
             _sz_++;
+            return *this;
         };
 
-        void pop_front()
+        this_type &pop_front()
         {
             if (_head_ == nullptr)
-                return;
+                return *this;
 
             _dllnode_ *temp = _head_;
             _head_ = _head_->_next_;
             delete temp;
             _head_->_prev_ = nullptr;
             _sz_--;
+            return *this;
         };
 
-        void pop_back()
+        this_type &pop_back()
         {
             if (_head_ == nullptr)
-                return;
+                return *this;
 
             _trail_->_next_ = nullptr;
             _tail_ = _trail_;
             _trail_ = _trail_->_prev_;
             _sz_--;
+            return *this;
         };
 
         reference
