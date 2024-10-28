@@ -240,6 +240,11 @@ namespace mlib
             return *this;
         };
 
+        reference back() const noexcept
+        {
+            return _trail_->_v_;
+        };
+
         reference
         operator[](size_type _index_)
         {
