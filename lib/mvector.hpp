@@ -88,6 +88,7 @@ namespace mlib
 
     void _resize_by_offset(const size_t _capacity_size_offset_)
     {
+
       size_t current_size = m_region_end - m_region_start;
       size_t current_capacity = m_region_capacity - m_region_start;
       size_t new_capacity = current_capacity + _capacity_size_offset_;
@@ -98,12 +99,9 @@ namespace mlib
         throw std::bad_alloc();
       }
 
-      if (new_start != this->m_region_start)
-      {
-        this->m_region_start = new_start;
-        this->m_region_end = new_start + current_size;
-        this->m_region_capacity = new_start + new_capacity;
-      }
+      this->m_region_start = new_start;
+      this->m_region_end = new_start + current_size;
+      this->m_region_capacity = new_start + new_capacity;
     }
 
     size_t _calculate_amortized_growth()
@@ -634,6 +632,7 @@ namespace mlib
     {
       if (this->size() >= this->capacity())
       {
+
         this->_resize_by_offset(this->_calculate_amortized_growth());
       }
 

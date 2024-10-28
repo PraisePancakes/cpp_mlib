@@ -29,6 +29,11 @@ namespace mlib
             m_ul_container.pop_back();
         };
 
+        Container &get_container() noexcept
+        {
+            return m_ul_container;
+        };
+
         [[nodiscard]] reference top() const noexcept
         {
 

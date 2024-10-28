@@ -3,35 +3,41 @@
 
 namespace mlib
 {
-    template <typename T, typename Alloc = mlib::allocator<T>>
-    class dllist
+
+    namespace internal
     {
-        using allocator_traits = mlib::allocator_traits<Alloc>;
-
-    public:
-        using value_type = allocator_traits::value_type;
-        using reference = allocator_traits::reference;
-        using const_reference = allocator_traits::const_reference;
-        using size_type = allocator_traits::size_type;
-
-    private:
-        using this_type = dllist<T, Alloc>;
-
+        template <typename U>
         struct _dllnode_
         {
             _dllnode_ *_prev_;
             _dllnode_ *_next_;
-            value_type _v_;
+            U _v_;
 
             _dllnode_() : _v_(), _prev_(nullptr), _next_(nullptr) {};
-            _dllnode_(value_type val) : _v_(val), _prev_(nullptr), _next_(nullptr) {};
-            _dllnode_(value_type val, _dllnode_ *p, _dllnode_ *n) : _v_(val), _prev_(p), _next_(n) {};
+            _dllnode_(U val) : _v_(val), _prev_(nullptr), _next_(nullptr) {};
+            _dllnode_(U val, _dllnode_ *p, _dllnode_ *n) : _v_(val), _prev_(p), _next_(n) {};
             ~_dllnode_() {};
         };
+    };
 
-        _dllnode_ *_head_;
-        _dllnode_ *_tail_;
-        _dllnode_ *_trail_;
+    template <typename T, typename Alloc = mlib::allocator<internal::_dllnode_<T>>>
+    class dllist
+    {
+        using allocator_traits = mlib::allocator_traits<Alloc>;
+        Alloc m_allocator;
+
+    public:
+        using value_type = T;
+        using reference = T &;
+        using const_reference = const T &;
+        using size_type = size_t;
+
+    private:
+        using this_type = dllist<T, Alloc>;
+
+        internal::_dllnode_<T> *_head_;
+        internal::_dllnode_<T> *_tail_;
+        internal::_dllnode_<T> *_trail_;
         size_type _sz_;
 
         bool _locate_which_partition(size_t _index_)
@@ -53,12 +59,15 @@ namespace mlib
             using difference_type = ptrdiff_t;
 
         private:
-            _dllnode_ *m_iterator;
+            internal::_dllnode_<std::remove_const_t<U>> *m_iterator;
 
         public:
             impl_dllist_iterator() : m_iterator(nullptr) {
                                      };
-            impl_dllist_iterator(_dllnode_ *_loc_) : m_iterator(_loc_) {};
+            impl_dllist_iterator(internal::_dllnode_<std::remove_const_t<U>> *_loc_) : m_iterator(_loc_) {};
+
+            impl_dllist_iterator(const internal::_dllnode_<std::remove_const_t<U>> *_loc_)
+                : m_iterator(const_cast<internal::_dllnode_<std::remove_const_t<U>> *>(_loc_)) {};
 
             reference operator*()
             {
@@ -157,9 +166,9 @@ namespace mlib
 
         this_type &reverse()
         {
-            _dllnode_ *ahead = nullptr;
-            _dllnode_ *prev = nullptr;
-            _dllnode_ *curr = _head_;
+            internal::_dllnode_<T> *ahead = nullptr;
+            internal::_dllnode_<T> *prev = nullptr;
+            internal::_dllnode_<T> *curr = _head_;
 
             while (curr)
             {
@@ -179,13 +188,16 @@ namespace mlib
         {
             if (!_head_)
             {
-                _head_ = new _dllnode_(v);
+                _head_ = m_allocator.allocate(1);
+                m_allocator.construct(_head_, v);
+
                 _trail_ = _head_;
                 _head_->_next_ = _tail_;
             }
             else
             {
-                _tail_ = new _dllnode_(v);
+                _tail_ = m_allocator.allocate(1);
+                m_allocator.construct(_tail_, v);
                 _tail_->_prev_ = _trail_;
                 _trail_->_next_ = _tail_;
                 _tail_->_next_ = nullptr;
@@ -200,13 +212,16 @@ namespace mlib
         {
             if (_head_ == nullptr)
             {
-                _head_ = new _dllnode_(v);
+                _head_ = m_allocator.allocate(1);
+                m_allocator.construct(_head_, v);
                 _trail_ = _head_;
                 _head_->_next_ = _tail_;
             }
             else
             {
-                _dllnode_ *temp = new _dllnode_(v);
+                internal::_dllnode_<T> *temp = m_allocator.allocate(1);
+                m_allocator.construct(temp, v);
+
                 temp->_next_ = _head_;
                 _head_->_prev_ = temp;
                 _head_ = _head_->_prev_;
@@ -220,9 +235,11 @@ namespace mlib
             if (_head_ == nullptr)
                 return *this;
 
-            _dllnode_ *temp = _head_;
+            internal::_dllnode_<T> *temp = _head_;
             _head_ = _head_->_next_;
-            delete temp;
+            m_allocator.destroy(temp);
+            m_allocator.deallocate(temp, 1);
+
             _head_->_prev_ = nullptr;
             _sz_--;
             return *this;
@@ -234,6 +251,8 @@ namespace mlib
                 return *this;
 
             _trail_->_next_ = nullptr;
+            m_allocator.destroy(_tail_);
+            m_allocator.deallocate(_tail_, 1);
             _tail_ = _trail_;
             _trail_ = _trail_->_prev_;
             _sz_--;
@@ -245,6 +264,11 @@ namespace mlib
             return _trail_->_v_;
         };
 
+        Alloc &get_allocator() const noexcept
+        {
+            return this->m_allocator;
+        };
+
         reference
         operator[](size_type _index_)
         {
@@ -254,7 +278,7 @@ namespace mlib
             if (in_right_half)
             {
                 size_type counter = _sz_ - 1;
-                _dllnode_ *temp = _trail_;
+                internal::_dllnode_<T> *temp = _trail_;
                 while (temp->_prev_ && counter != _index_)
                 {
                     temp = temp->_prev_;
@@ -266,7 +290,7 @@ namespace mlib
             else
             {
                 size_type counter = 0;
-                _dllnode_ *temp = _head_;
+                internal::_dllnode_<T> *temp = _head_;
                 while (temp->_next_ && counter != _index_)
                 {
                     temp = temp->_next_;

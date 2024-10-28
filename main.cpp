@@ -3,15 +3,14 @@
 #include <stack>
 int main()
 {
-  mlib::stack<int> s;
-  s.push(4);
-  s.push(6);
-  s.push(1);
 
-  while (!s.empty())
+  mlib::vec<int> v;
+  for (size_t i = 0; i < 200; ++i)
   {
-    std::cout << s.top();
-    s.pop();
+    v.push_back(i + 1);
   }
+
+  v.print();
+
   return 0;
 };
