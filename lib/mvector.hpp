@@ -136,9 +136,14 @@ namespace mlib
       reserve(_capacity_);
       for (size_t i = 0; i < _capacity_; i++)
       {
-        allocator_traits<Alloc>::construct(this->m_region_start + i, _v_);
+        this->m_alloc.construct(this->m_region_start + i, _v_);
         m_region_end++;
       }
+    };
+
+    Alloc &get_allocator() noexcept
+    {
+      return this->m_alloc;
     };
 
     void
@@ -148,7 +153,7 @@ namespace mlib
       {
         for (size_t i = 0; i < size(); i++)
         {
-          allocator_traits<Alloc>::destroy(m_region_start + i);
+          this->m_alloc.destroy(m_region_start + i);
         }
       }
 
@@ -161,7 +166,7 @@ namespace mlib
 
     virtual ~vec_base()
     {
-      allocator_traits<Alloc>::deallocate(m_region_start);
+      this->m_alloc.deallocate(m_region_start, 1);
     };
   };
 
@@ -582,14 +587,6 @@ namespace mlib
       }
 
       return *(this->m_region_start + _ptr_index_);
-    };
-    // void(*_functor_)(reference)
-    void for_each(void (*_functor_)(reference)) noexcept
-    {
-      for (size_type i = 0; i < this->size(); i++)
-      {
-        _functor_(*(this->m_region_start + i));
-      }
     };
 
     iterator begin() const
