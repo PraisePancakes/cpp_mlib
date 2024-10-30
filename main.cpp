@@ -5,15 +5,16 @@
 int main()
 {
 
-  std::vector<int> v;
+  mlib::vec<int> v;
 
   for (size_t i = 0; i < 10; ++i)
   {
     v.push_back(i);
   }
 
-  mlib::for_each(v.begin(), v.end(), [](int x)
-                 { std::cout << x; });
+  mlib::reverse(v.begin(), v.end());
+
+  v.print();
 
   return 0;
 };

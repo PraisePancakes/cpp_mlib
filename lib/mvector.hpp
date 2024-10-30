@@ -191,6 +191,7 @@ namespace mlib
       using const_reference = const U &;
       using size_type = size_t;
       using difference_type = std::ptrdiff_t;
+
       pointer m_Iterator;
       impl_vec_iterator() : m_Iterator(nullptr) {};
       impl_vec_iterator(pointer _loc_) : m_Iterator(_loc_) {};
@@ -219,6 +220,23 @@ namespace mlib
         this_it temp = *this;
         --(*this);
         return temp;
+      };
+
+      this_it operator+(const difference_type _off_)
+      {
+
+        return this_it(*this).operator+=(_off_);
+      }
+
+      this_it &operator+=(const difference_type _off_)
+      {
+        m_Iterator = m_Iterator + _off_;
+        return *this;
+      };
+
+      this_it &operator-=(const difference_type _off_)
+      {
+        return (*this).operator+=(-_off_);
       };
 
       bool operator==(const this_it &other)
@@ -689,38 +707,6 @@ namespace mlib
         SortingStrategyAdapter<QuickSort> s;
         s.execute(*this);
       };
-    };
-
-    bool contains(value_type _v_)
-    {
-      for (size_type i = 0; i < this->size(); i++)
-      {
-        if (*(this->m_region_start + i) == _v_)
-        {
-          return true;
-        }
-      }
-      return false;
-    };
-
-    // splice , insert
-    void reverse()
-    {
-      // reverse whole vector
-      if (this->size() == 0)
-        return;
-
-      if (this->size() == 1)
-        return;
-
-      size_type j = this->size() - 1;
-      for (size_type i = 0; i < j; i++)
-      {
-        const value_type temp = this->m_region_start[i];
-        this->m_region_start[i] = this->m_region_start[j];
-        this->m_region_start[j] = temp;
-        j--;
-      }
     };
 
     void reverse(size_type _start_, size_type _end_)
