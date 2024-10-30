@@ -709,33 +709,6 @@ namespace mlib
       };
     };
 
-    void reverse(size_type _start_, size_type _end_)
-    {
-      // reverse from start to end.
-      if (this->size() == 0)
-        return;
-
-      if (this->size() == 1)
-        return;
-
-      const size_type temp_start = _start_;
-      const size_type temp_end = _end_;
-
-      if (_start_ > _end_)
-      {
-        _start_ = temp_end;
-        _end_ = temp_start;
-      }
-
-      size_type j = _end_;
-      for (size_type i = _start_; i < j; i++, j--)
-      {
-        const value_type temp = this->m_region_start[i];
-        this->m_region_start[i] = this->m_region_start[j];
-        this->m_region_start[j] = temp;
-      }
-    };
-
     mlib::vec<value_type> slice(size_type __start__, size_type __end__)
     {
       const int temp_start = __start__;
