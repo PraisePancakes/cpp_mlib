@@ -5,11 +5,9 @@
 
 int main()
 {
-  mlib::vec<int> v{1, 2, 3, 4, 5};
+  mlib::vec<int> v{1, 3, 2, 8, 5, 3, 10, 7, 6};
 
-  mlib::reverse(v.begin(), v.end(), 0, 0);
-
+  mlib::sort(v.begin(), v.end());
   v.print();
-
   return 0;
 };

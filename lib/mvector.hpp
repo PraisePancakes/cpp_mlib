@@ -222,6 +222,11 @@ namespace mlib
         return temp;
       };
 
+      pointer get() const
+      {
+        return m_Iterator;
+      }
+
       this_it operator+(const difference_type _off_)
       {
 
@@ -238,6 +243,11 @@ namespace mlib
       {
         return (*this).operator+=(-_off_);
       };
+
+      reference operator[](const difference_type _off_)
+      {
+        return *(this->m_Iterator + _off_);
+      }
 
       bool operator==(const this_it &other)
       {
@@ -397,77 +407,6 @@ namespace mlib
         s.splice(_mem_s_, _mem_e_, _s_index_, _span_, _elems_);
       };
       ~SpliceStrategyAdapter() {};
-    };
-
-    struct ISortingStrategy
-    {
-      ISortingStrategy() {};
-
-      virtual void sort(const mlib::vec<value_type> &v) = 0;
-
-      ~ISortingStrategy() {
-      };
-    };
-
-    struct QuickSort : public ISortingStrategy
-    {
-    private:
-      void _quick_sort(const mlib::vec<value_type> &v, size_type start, size_type end)
-      {
-        if (end <= start)
-          return;
-
-        int pivot = _partition(v, start, end);
-
-        _quick_sort(v, start, pivot - 1);
-        _quick_sort(v, pivot + 1, end);
-      };
-
-      int _partition(const mlib::vec<value_type> &v, size_type start, size_type end)
-      {
-        value_type pivot = v[end];
-
-        int i = start - 1;
-        for (size_t j = start; j <= end - 1; j++)
-        {
-          if (v[j] < pivot)
-          {
-            i++;
-            value_type temp = v[i];
-            v[i] = v[j];
-            v[j] = temp;
-          }
-        };
-        i++;
-        value_type temp = v[i];
-        v[i] = v[end];
-        v[end] = temp;
-
-        return i;
-      };
-
-    public:
-      QuickSort() {};
-      void sort(const mlib::vec<value_type> &v) override
-      {
-        _quick_sort(v, 0, v.size() - 1);
-      };
-      ~QuickSort() {};
-    };
-
-    template <typename Strategy, typename = std::enable_if_t<mlib::is_base_of<ISortingStrategy, Strategy>::value>>
-    struct SortingStrategyAdapter
-    {
-
-      SortingStrategyAdapter() {};
-      void execute(const mlib::vec<value_type> &v)
-      {
-        s.sort(v);
-      };
-      ~SortingStrategyAdapter() {};
-
-    private:
-      Strategy s;
     };
 
   public:
@@ -699,15 +638,6 @@ namespace mlib
         push_back(*it);
       }
     }
-
-    void sort()
-    {
-      if (this->size() <= QSORT_THRESHOLD)
-      {
-        SortingStrategyAdapter<QuickSort> s;
-        s.execute(*this);
-      };
-    };
 
     mlib::vec<value_type> slice(size_type __start__, size_type __end__)
     {
