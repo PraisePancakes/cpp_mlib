@@ -19,12 +19,16 @@ namespace mlib
     template <typename BidIt>
     void reverse(BidIt _first_, BidIt _last_)
     {
-        while (_first_ != _last_ && _first_ != --_last_)
+
+        while (_first_ != _last_)
         {
             typename mlib::iterator_traits<BidIt>::value_type temp = *_first_;
             *_first_ = *_last_;
             *_last_ = temp;
             ++_first_;
+            if (_first_ == _last_)
+                return;
+            --_last_;
         }
     };
 
@@ -33,6 +37,7 @@ namespace mlib
     {
         _first_ += start;
         _last_ = _first_ + end;
+
         reverse(_first_, _last_);
     }
 
