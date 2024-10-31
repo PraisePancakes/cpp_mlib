@@ -177,96 +177,6 @@ namespace mlib
     typedef allocator_traits<Alloc> allocator_traits;
     typedef allocator_traits::value_type value_type;
 
-    template <typename U>
-    class impl_vec_iterator
-    {
-
-    public:
-      using this_it = impl_vec_iterator<U>;
-      using category = random_access_iterator_tag;
-      using value_type = U;
-      using pointer = U *;
-      using const_pointer = const U *;
-      using reference = U &;
-      using const_reference = const U &;
-      using size_type = size_t;
-      using difference_type = std::ptrdiff_t;
-
-      pointer m_Iterator;
-      impl_vec_iterator() : m_Iterator(nullptr) {};
-      impl_vec_iterator(pointer _loc_) : m_Iterator(_loc_) {};
-
-      this_it &operator++()
-      {
-        ++m_Iterator;
-        return *this;
-      };
-
-      this_it &operator--()
-      {
-        --m_Iterator;
-        return *this;
-      }
-
-      this_it operator++(int)
-      {
-        this_it temp = *this;
-        ++(*this);
-        return temp;
-      };
-
-      this_it operator--(int)
-      {
-        this_it temp = *this;
-        --(*this);
-        return temp;
-      };
-
-      pointer get() const
-      {
-        return m_Iterator;
-      }
-
-      this_it operator+(const difference_type _off_)
-      {
-
-        return this_it(*this).operator+=(_off_);
-      }
-
-      this_it &operator+=(const difference_type _off_)
-      {
-        m_Iterator = m_Iterator + _off_;
-        return *this;
-      };
-
-      this_it &operator-=(const difference_type _off_)
-      {
-        return (*this).operator+=(-_off_);
-      };
-
-      reference operator[](const difference_type _off_)
-      {
-        return *(this->m_Iterator + _off_);
-      }
-
-      bool operator==(const this_it &other)
-      {
-        return m_Iterator == other.m_Iterator;
-      };
-
-      bool operator!=(const this_it &other)
-      {
-        return m_Iterator != other.m_Iterator;
-      }
-
-      reference operator*()
-      {
-        return *m_Iterator;
-      };
-
-      ~impl_vec_iterator() {};
-    };
-
   public:
     typedef typename allocator_traits::pointer pointer;
     typedef typename allocator_traits::const_reference const_reference;
@@ -274,8 +184,9 @@ namespace mlib
     typedef ptrdiff_t difference_type;
     typedef size_t size_type;
 
-    typedef impl_vec_iterator<T> iterator;
-    typedef impl_vec_iterator<const T> const_iterator;
+    
+    typedef T *iterator;
+    typedef const T *const_iterator;
     typedef mlib::reverse_iterator<iterator> reverse_iterator;
     typedef mlib::reverse_iterator<const_iterator> const_reverse_iterator;
 

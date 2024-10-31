@@ -18,68 +18,66 @@ namespace mlib
     namespace internal
     {
         template <typename RAIT>
-        size_t _internal_iterator_diff(RAIT s, RAIT e)
+        ptrdiff_t _internal_iterator_diff(RAIT s, RAIT e)
         {
             return e.get() - s.get();
         };
 
         template <typename RAIT>
-        class _internal_quick_sort_helper
+        class _internal_quick_sort_functor
         {
 
         protected:
             typedef mlib::iterator_traits<RAIT> it_traits;
             typedef it_traits::value_type value_type;
             typedef it_traits::reference reference;
+            typedef it_traits::size_type size_type;
 
-            RAIT _hold_container_start;
-            size_t first;
-            size_t last;
+            RAIT first;
+            RAIT last;
+            size_type size;
 
-        private:
-            size_t _partition(size_t start, size_t end)
+            RAIT _partition(RAIT s, RAIT e)
             {
-                reference pivot = _hold_container_start[end];
-                size_t i = start;
-                for (size_t j = start; j < end; j++)
+                RAIT pivot = e;
+
+                RAIT i = s - 1;
+                for (RAIT j = s; j < e; j++)
                 {
-                    if (_hold_container_start[j] < pivot)
+                    if (*j <= *pivot)
                     {
-
-                        mlib::swap(_hold_container_start[i], _hold_container_start[j]);
                         i++;
+                        mlib::swap(*i, *j);
                     }
-                };
+                }
 
-                mlib::swap(_hold_container_start[i], _hold_container_start[end]);
+                mlib::swap(*(i + 1), *e);
 
-                return i;
+                return i + 1;
             };
 
-            void _quick_sort(size_t start, size_t end)
+            void _quick_sort(RAIT start, RAIT end)
             {
                 if (start >= end)
                     return;
 
-                size_t pivot = _partition(start, end);
+                RAIT pivot = _partition(start, end);
 
-                if (pivot > 0)
-                    _quick_sort(start, pivot - 1);
+                _quick_sort(start, pivot - 1);
                 _quick_sort(pivot + 1, end);
             };
 
         public:
-            _internal_quick_sort_helper(RAIT _first_, RAIT _last_) : _hold_container_start(_first_), first(0), last(_internal_iterator_diff(_first_, _last_) - 1) {
-
-                                                                     };
-
-            void sort()
+            _internal_quick_sort_functor(RAIT start, RAIT end, size_type size) : first(start), last(end), size(size)
             {
-
-                _quick_sort(first, last);
+                (*this)();
+            };
+            void operator()()
+            {
+                _quick_sort(first, last - 1);
             };
 
-            ~_internal_quick_sort_helper() = default;
+            ~_internal_quick_sort_functor() = default;
         };
 
     }
@@ -87,10 +85,11 @@ namespace mlib
     template <typename RAIT>
     void sort(RAIT _first_, RAIT _last_)
     {
-        if (mlib::internal::_internal_iterator_diff(_first_, _last_) <= QSORT_THRESHOLD)
+        typename iterator_traits<RAIT>::difference_type size = _last_ - _first_;
+
+        if (size <= QSORT_THRESHOLD)
         {
-            mlib::internal::_internal_quick_sort_helper<RAIT> h(_first_, _last_);
-            h.sort();
+            internal::_internal_quick_sort_functor<RAIT> do_quick_sort(_first_, _last_, size); // underlying layout of iterators _first_ , _last_ depends on container::begin() / end() then sorts
         };
     }
 

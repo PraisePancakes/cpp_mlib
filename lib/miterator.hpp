@@ -46,6 +46,7 @@ namespace mlib
     struct iterator_traits
     {
         typedef Iter::difference_type difference_type;
+        typedef Iter::size_type size_type;
         typedef Iter::value_type value_type;
         typedef Iter::pointer pointer;
         typedef Iter::const_pointer const_pointer;
@@ -66,10 +67,12 @@ namespace mlib
     template <typename T>
     struct iterator_traits<T *> // int* , char* etc..
     {
-        typedef random_access_iterator_tag iterator_category;
+        typedef random_access_iterator_tag category;
         typedef T value_type;
         typedef T *pointer;
         typedef T &reference;
+        typedef const T *const_pointer;
+        typedef const T &const_reference;
         typedef std::ptrdiff_t difference_type;
         typedef size_t size_type;
     };
@@ -77,7 +80,7 @@ namespace mlib
     template <typename T>
     struct iterator_traits<const T *> // int* , char* etc..
     {
-        typedef random_access_iterator_tag iterator_category;
+        typedef random_access_iterator_tag category;
         typedef T value_type;
         typedef T *pointer;
         typedef T &reference;
@@ -90,17 +93,22 @@ namespace mlib
     template <typename Iter>
     class reverse_iterator
     {
+
+    public:
         typedef typename iterator_traits<Iter>::category category;
         typedef typename iterator_traits<Iter>::value_type value_type;
         typedef typename iterator_traits<Iter>::pointer pointer;
         typedef typename iterator_traits<Iter>::const_pointer const_pointer;
         typedef typename iterator_traits<Iter>::reference reference;
         typedef typename iterator_traits<Iter>::const_reference const_reference;
+        typedef typename iterator_traits<Iter>::difference_type difference_type;
+        typedef typename iterator_traits<Iter>::size_type size_type;
         Iter m_RIterator;
 
-    public:
         reverse_iterator() : m_RIterator(nullptr) {};
         reverse_iterator(Iter _loc_) : m_RIterator(_loc_) {};
+        reverse_iterator(const reverse_iterator &_other_) : m_RIterator(_other_.m_RIterator) {};
+
         reverse_iterator &operator++()
         {
             m_RIterator--;
@@ -120,6 +128,48 @@ namespace mlib
             return *this;
         }
 
+        reverse_iterator &operator=(const reverse_iterator &_other_)
+        {
+            this->m_RIterator = _other_.m_RIterator;
+        };
+
+        Iter get() const { return m_RIterator; };
+
+        reverse_iterator operator-(difference_type n)
+        {
+            return reverse_iterator(m_RIterator + n);
+        }
+
+        reverse_iterator operator+(difference_type n)
+        {
+            return reverse_iterator(m_RIterator - n);
+        };
+
+        bool operator<(const reverse_iterator &other)
+        {
+            return this->m_RIterator > other.m_RIterator;
+        }
+
+        bool operator<=(const reverse_iterator &other)
+        {
+            return this->m_RIterator >= other.m_RIterator;
+        }
+
+        bool operator>(const reverse_iterator &other)
+        {
+            return this->m_RIterator < other.m_RIterator;
+        }
+
+        bool operator>=(const reverse_iterator &other)
+        {
+            return this->m_RIterator <= other.m_RIterator;
+        }
+
+        reference operator[](size_type _off_)
+        {
+            return *(m_RIterator.get() + _off_);
+        }
+
         reference operator*()
         {
             return *m_RIterator;
@@ -135,6 +185,12 @@ namespace mlib
             return this->m_RIterator != other.m_RIterator;
         };
         ~reverse_iterator() = default;
+    };
+
+    template <typename Iter1, typename Iter2>
+    inline constexpr iterator_traits<Iter1>::difference_type operator-(const reverse_iterator<Iter1> &a, const reverse_iterator<Iter2> &b)
+    {
+        return b.get() - a.get();
     };
 
 }
