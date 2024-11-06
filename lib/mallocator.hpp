@@ -17,54 +17,52 @@ namespace mlib
         typedef typename Alloc::size_type size_type;
         typedef typename Alloc::difference_type difference_type;
 
-        static pointer allocate(size_t _n_)
-        {
-
-            pointer alloc_block = (pointer)malloc(_n_ * sizeof(value_type));
-            if (!alloc_block)
-            {
-                std::cout << "null";
-                return nullptr;
+    private:
+        static constexpr bool has_allocate =
+            requires(Alloc &a, size_type n) {
+                { a.allocate(n) } -> std::same_as<typename Alloc::pointer>;
             };
-            return alloc_block;
-        };
 
-        static void allocate_at(pointer &_loc_, difference_type _n_)
+        static constexpr bool has_reallocate =
+            requires(Alloc &a, pointer old, size_type n) {
+                { a.reallocate(old, n) } -> std::same_as<typename Alloc::pointer>;
+            };
+
+    public:
+        static pointer
+        allocate(Alloc &alloc, size_type n)
         {
-            _loc_ = (pointer)malloc(_n_ * sizeof(value_type));
-            if (!_loc_)
+            if constexpr (has_allocate)
             {
-                _loc_ = nullptr;
+                return alloc.allocate(n);
+            }
+            else
+            {
+                return (pointer)malloc(n * sizeof(value_type));
             }
         }
 
-        static pointer allocate(Alloc &alloc, difference_type _n_)
+        static pointer reallocate(Alloc &alloc, pointer _old_, difference_type _n_)
         {
-            return alloc.allocate(_n_);
-        };
-
-        static void reallocate_at(pointer &_loc_, difference_type _n_)
-        {
-            _loc_ = (pointer)realloc(_loc_, _n_ * sizeof(value_type));
-            if (!_loc_)
+            if constexpr (has_reallocate)
             {
-                _loc_ = nullptr;
-            }
-        }
 
-        static pointer reallocate(pointer _old_, difference_type _n_)
-        {
-            pointer new_loc = (pointer)realloc(_old_, _n_ * sizeof(value_type));
-            if (!new_loc)
-            {
-                std::cout << "null";
-                return nullptr;
+                return alloc.reallocate(_old_, _n_);
             }
-            return new_loc;
+            else
+            {
+                pointer new_loc = (pointer)realloc(_old_, _n_ * sizeof(value_type));
+                if (!new_loc)
+                {
+                    std::cout << "null";
+                    return nullptr;
+                }
+                return new_loc;
+            }
         }
 
         template <class... _FwdArgs>
-        static void construct(pointer _loc_, _FwdArgs &&..._args_)
+        static void construct(Alloc &alloc, pointer _loc_, _FwdArgs &&..._args_)
         {
             ::new (_loc_) value_type(std::forward<_FwdArgs>(_args_)...);
         };
@@ -115,7 +113,6 @@ namespace mlib
 
         pointer reallocate(pointer _old_, size_t _n_)
         {
-
             pointer new_block = (pointer)realloc(_old_, _n_ * sizeof(value_type));
             if (new_block == nullptr)
             {

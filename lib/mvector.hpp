@@ -184,7 +184,6 @@ namespace mlib
     typedef ptrdiff_t difference_type;
     typedef size_t size_type;
 
-    
     typedef T *iterator;
     typedef const T *const_iterator;
     typedef mlib::reverse_iterator<iterator> reverse_iterator;

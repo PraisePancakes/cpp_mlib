@@ -1,16 +1,13 @@
 #include <iostream>
-#include "lib/mstack.hpp"
-#include "lib/algorithms/algorithms.hpp"
-#include <stack>
-#include <algorithm>
+#include <memory>
+#include "lib/mallocator.hpp"
 
 int main()
 {
-  mlib::vec<int> v{1, 3, 2, 8, 5, 3, 10, 7, 6};
+  mlib::allocator<int> a;
 
-  mlib::sort(v.rbegin(), v.rend());
-
-  v.print();
+  auto p = mlib::allocator_traits<mlib::allocator<int>>::allocate(a, 1);
+  p = mlib::allocator_traits<mlib::allocator<int>>::reallocate(a, p, 5);
 
   return 0;
 };

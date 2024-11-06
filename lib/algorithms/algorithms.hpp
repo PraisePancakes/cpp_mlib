@@ -1,4 +1,5 @@
 #pragma once
+#include "miterator.hpp"
 /*
 ALG LIST
     -- for_each
@@ -18,7 +19,7 @@ namespace mlib
     namespace internal
     {
         template <typename RAIT>
-        ptrdiff_t _internal_iterator_diff(RAIT s, RAIT e)
+        std::ptrdiff_t _internal_iterator_diff(RAIT s, RAIT e)
         {
             return e.get() - s.get();
         };
@@ -89,7 +90,7 @@ namespace mlib
 
         if (size <= QSORT_THRESHOLD)
         {
-            internal::_internal_quick_sort_functor<RAIT> do_quick_sort(_first_, _last_, size); // underlying layout of iterators _first_ , _last_ depends on container::begin() / end() then sorts
+            internal::_internal_quick_sort_functor<RAIT>(_first_, _last_, size);
         };
     }
 
